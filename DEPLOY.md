@@ -40,16 +40,43 @@ reads it; the window closes because the key expires.
 
 ## Deploying
 
-Project root is `eyes/`. From the repo:
+The repo root is the project root: `api/` holds the two functions and
+`vercel.json` maps `/play` and `/scene` onto them, bundling the images
+alongside. There is no build step and no framework - the preset is **Other**,
+with build command and output directory left empty.
+
+From the dashboard: **Add New > Project**, import `readme-clickable-image`,
+leave every setting alone, add the variables below, deploy.
+
+Or from a clone:
 
 ```bash
-npx vercel --cwd eyes            # preview
-npx vercel --cwd eyes --prod
+npx vercel            # links the project, deploys a preview
+npx vercel --prod
 ```
 
-Set `PROFILE_URL=https://github.com/qvd808` in the project's environment, or
-the click sends visitors to whatever the default is. `vercel.json` maps `/play`
-and `/scene` onto the functions and bundles the image assets alongside them.
+Set `PROFILE_URL`, or the click sends visitors wherever the default in
+`api/_shared.mjs` points:
+
+```
+PROFILE_URL = https://github.com/qvd808     # or a scratch repo, while testing
+WINDOW_MS   = 12000                         # optional: how long one click lasts
+```
+
+Environment changes do not reach the running deployment until you redeploy.
+
+## Checking it worked
+
+```bash
+curl -sD- -o /dev/null https://YOUR-APP.vercel.app/scene   # image/jpeg + no-store
+curl -sD- -o /dev/null https://YOUR-APP.vercel.app/play    # 302 to PROFILE_URL
+curl -sD- -o /dev/null https://YOUR-APP.vercel.app/scene   # image/svg+xml
+```
+
+A 500 on `/scene` means the function could not find `poster.jpg` and
+`eyes-once.svg` - `includeFiles` did not carry them, and the error lists the
+paths that were tried. Check that first: a 500 here is a broken image at the top
+of the profile on every single view, not just for people who click.
 
 Then point the README at it:
 
