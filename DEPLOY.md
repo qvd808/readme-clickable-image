@@ -18,17 +18,23 @@ the README. Static hosting is exactly right for that, and it costs nothing.
 
 ## Vercel works, with one thing to know
 
-`/play` and `/scene` are separate invocations that may land on different
-instances, so **the flag cannot live in a variable**. `api/_shared.mjs` keeps it
-in Redis when one is configured and falls back to memory when it is not.
+Vercel compiles each file in `api/` into its own lambda with its own memory, so
+splitting `/play` and `/scene` across two files means the flag written by one is
+never visible to the other - not sometimes, never. That is why both routes live
+in a single `api/eyes.mjs`: one file, one lambda, one module scope, and the flag
+works with nothing behind it.
 
-The fallback is honest about what it is: it works only while a single instance
-stays warm. For a quiet profile that is most of the time, so it is fine for a
-first deploy - but a click that lands on a cold instance does nothing, and you
-will not be able to tell that from a click that worked.
+That gets you a free deployment that is right nearly all of the time. What it
+does not get you is a guarantee: Vercel can run several instances of a function,
+and nothing pins the click and the reload to the same one. On a personal profile
+- low traffic, one warm instance, two requests a second apart - they land
+together. Under real traffic they sometimes will not, and a click that misses
+looks exactly like a click that worked.
 
-For the real thing, add a free Upstash Redis (Vercel KV is the same service)
-and set either pair of names - both are read:
+To close that gap, attach Redis from the project's **Storage** tab. Upstash has
+a free tier; the official Redis Cloud listing starts at $8/month, and its free
+plan only appears once High Availability is set to None. Either way the
+integration injects the variables itself, and both pairs of names are read:
 
 ```
 UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN

@@ -1,10 +1,9 @@
 {
   "functions": {
-    "api/play.mjs": { "includeFiles": "*.{jpg,svg}" },
-    "api/scene.mjs": { "includeFiles": "*.{jpg,svg}" }
+    "api/eyes.mjs": { "includeFiles": "*.{jpg,svg}" }
   },
   "rewrites": [
-    { "source": "/play", "destination": "/api/play" },
-    { "source": "/scene", "destination": "/api/scene" }
+    { "source": "/play", "destination": "/api/eyes?do=play" },
+    { "source": "/scene", "destination": "/api/eyes" }
   ]
 }

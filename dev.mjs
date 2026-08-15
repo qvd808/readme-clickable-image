@@ -1,5 +1,4 @@
-// The two Vercel functions, on a local port. Same handlers the deployment
-// runs - there is deliberately no second implementation to drift out of sync.
+// The deployed function, on a local port. One handler, same as production.
 //
 //   node dev.mjs            then open http://localhost:8787/scene
 //
@@ -8,16 +7,13 @@
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.PORT || 8787);
-const play = (await import("./api/play.mjs")).default;
-const scene = (await import("./api/scene.mjs")).default;
+const eyes = (await import("./api/eyes.mjs")).default;
 
 createServer(async (req, res) => {
   const p = new URL(req.url, "http://localhost").pathname;
-  const ua = (req.headers["user-agent"] || "-").slice(0, 40);
-  console.log(`${new Date().toISOString().slice(11, 23)}  ${p.padEnd(8)} ${ua}`);
+  console.log(`${new Date().toISOString().slice(11, 23)}  ${req.url}`);
   try {
-    if (p === "/play") return await play(req, res);
-    if (p === "/scene") return await scene(req, res);
+    if (p === "/play" || p === "/scene") return await eyes(req, res);
   } catch (err) {
     res.writeHead(500, { "Content-Type": "text/plain" });
     return res.end(String(err && err.message) + "\n");
