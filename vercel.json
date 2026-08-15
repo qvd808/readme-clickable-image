@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/*.mjs": {
+      "includeFiles": "*.{jpg,svg}"
+    }
+  },
+  "rewrites": [
+    { "source": "/play", "destination": "/api/play" },
+    { "source": "/scene", "destination": "/api/scene" }
+  ]
+}
