@@ -20,7 +20,11 @@ createServer(async (req, res) => {
     }
     if (p === "/play" || p === "/scene") {
       const fullUrl = `http://${req.headers.host || "localhost"}${req.url}`;
-      const webReq = new Request(fullUrl, { method: req.method });
+      const reqHeaders = new Headers();
+      for (const [k, v] of Object.entries(req.headers)) {
+        if (typeof v === "string" && !k.startsWith(":")) reqHeaders.set(k, v);
+      }
+      const webReq = new Request(fullUrl, { method: req.method, headers: reqHeaders });
       const response = await eyes(webReq);
 
       const headersObj = {};

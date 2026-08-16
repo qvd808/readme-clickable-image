@@ -76,15 +76,50 @@ export async function fetchRemoteAsset(urlStr) {
   return asset;
 }
 
+const AUTO_BACK = new Set(["auto", "referer", "referrer", "history"]);
+
+/**
+ * Derives the page a /play click came from out of its Referer header.
+ *
+ * @param {string} referer - Raw Referer header value; may be empty or absent.
+ * @returns {string} Absolute allowed-host URL, or "" if absent, disallowed, or
+ *   stripped to a bare origin by the referrer policy of a GitHub profile page.
+ */
+export function backFromReferer(referer) {
+  if (!referer) return "";
+  let u;
+  try { u = new URL(referer); } catch { return ""; }
+  if (u.protocol !== "https:") return "";
+  if (!BACK_HOSTS.has(u.hostname)) return "";
+  if (u.pathname === "" || u.pathname === "/") return "";
+  u.hash = "";
+  return u.toString();
+}
+
 /**
  * Parses query parameters and computes a unique SHA-1 hash key for the asset pair.
  *
  * @param {URL} url - Incoming Request URL object.
- * @returns {Promise<{back: string, still: string, play: string, key: string, redirecting: boolean}>} Config object.
+ * @returns {Promise<{back: string, still: string, play: string, key: string, redirecting: boolean, isAutoBack: boolean, backFallback: string}>} Config object.
  */
 export async function config(url) {
   const q = url.searchParams;
-  const back = checked(q.get("back") || DEFAULT_BACK, BACK_HOSTS, "back");
+  const rawBack = (q.get("back") || "").trim();
+  const rawMode = (q.get("mode") || "").trim();
+
+  const isAutoBack = AUTO_BACK.has(rawBack) || AUTO_BACK.has(rawMode);
+
+  let back = "";
+  let backFallback;
+
+  if (isAutoBack) {
+    const fallback = q.get("fallback") || (AUTO_BACK.has(rawBack) ? "" : rawBack);
+    backFallback = checked(fallback || DEFAULT_BACK, BACK_HOSTS, "fallback");
+  } else {
+    back = checked(rawBack || DEFAULT_BACK, BACK_HOSTS, "back");
+    backFallback = back;
+  }
+
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
 
@@ -92,7 +127,7 @@ export async function config(url) {
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
   const key = "eyes:" + hex.slice(0, 12);
-  return { back, still, play, key, redirecting: Boolean(still && play) };
+  return { back, still, play, key, redirecting: Boolean(still && play), isAutoBack, backFallback };
 }
 
 export const BLACK_CANVAS = Buffer.from(

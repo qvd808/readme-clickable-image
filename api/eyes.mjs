@@ -1,13 +1,14 @@
 export const config = { runtime: "edge" };
 
-import { BLACK_CANVAS, config as getConfig, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
+import { BLACK_CANVAS, backFromReferer, config as getConfig, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
 /**
  * Handles incoming HTTP requests for /play and /scene endpoints in Vercel Edge Runtime.
  *
  * @param {Request} req - Web Standard Request object containing 'still', 'play', and 'back' query parameters.
  * @returns {Promise<Response>} Web Standard Response:
- *   - /play: 302 Found redirect to 'back' URL after setting click state.
+ *   - /play: 302 Found redirect to the 'back' URL, or in auto mode to the page the
+ *     click came from, after setting click state.
  *   - /scene: 200 OK returning image bytes with no-store headers.
  */
 export default async function handler(req) {
@@ -29,9 +30,12 @@ export default async function handler(req) {
       // Pre-warm the animation asset into Edge memory during the redirect!
       fetchRemoteAsset(cfg.play).catch(() => {});
     }
+    const destination = cfg.isAutoBack
+      ? (backFromReferer(req.headers.get("referer")) || cfg.backFallback)
+      : cfg.back;
     const headers = new Headers();
-    uncached(headers);
-    headers.set("Location", cfg.back);
+    uncached(headers, cfg.isAutoBack ? { "Vary": "Referer" } : {});
+    headers.set("Location", destination);
     return new Response(null, { status: 302, headers });
   }
 

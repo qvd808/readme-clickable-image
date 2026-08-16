@@ -75,6 +75,24 @@ Copy and paste this HTML snippet into your `README.md`:
 | `still` | Optional | URL of the idle image (static image or looping animated WebP/GIF). **If missing:** Displays a black canvas (`#000000`). |
 | `play` | Optional | URL of the triggered animation image (`.svg`, `.gif`, `.webp`). **If missing:** Clicks remain static without playing an animation. |
 | `back` | Recommended | Destination GitHub repository or profile URL to redirect the visitor after clicking. |
+| `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from instead of a fixed URL. `back` then acts as the fallback. |
+| `fallback` | Optional | Explicit fallback destination for `mode=auto`. Defaults to `back`. |
+
+---
+
+## 🔁 Returning to the Right Page (`mode=auto`)
+
+A profile README is rendered in **two** places — `github.com/YOUR_USER` and the repo `github.com/YOUR_USER/YOUR_USER`. A fixed `back` URL sends everyone to the same one, so clicking from inside the repo kicks the visitor out to the profile page.
+
+Add `mode=auto` to send them back to wherever they actually were:
+
+```html
+<a href="https://readme-clickable-image.vercel.app/play?mode=auto&back=https://github.com/YOUR_USER&still=...&play=...">
+```
+
+**How it works:** GitHub serves repo pages with `Referrer-Policy: no-referrer-when-downgrade`, so the full URL reaches `/play` in the `Referer` header and the visitor is returned to that exact page. Profile pages use `strict-origin-when-cross-origin`, which strips the path to a bare `https://github.com/` — that's the signal to use `back` (your profile) instead.
+
+The redirect target is always validated against the same `github.com` allowlist as `back`, so a missing, foreign, or downgraded `Referer` falls back rather than redirecting off-site. Links without `mode=auto` behave exactly as before.
 
 ---
 
