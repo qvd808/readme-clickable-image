@@ -52,9 +52,12 @@ export function config(url) {
   const back = checked(q.get("back") || DEFAULT_BACK, BACK_HOSTS, "back");
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
-  // one flag per configuration, so one person's click cannot fire another's
+  // One flag per pair of images, so one person's click cannot fire another's.
+  // Deliberately NOT keyed on `back`: /scene has no reason to carry it, and if
+  // it contributed to the key then /play and /scene would disagree and no click
+  // would ever register.
   const key = "eyes:" + createHash("sha1")
-    .update(`${still}|${play}|${back}`).digest("hex").slice(0, 12);
+    .update(`${still}|${play}`).digest("hex").slice(0, 12);
   return { back, still, play, key, redirecting: Boolean(still && play) };
 }
 
