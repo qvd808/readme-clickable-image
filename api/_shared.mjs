@@ -50,7 +50,7 @@ export async function fetchRemoteAsset(urlStr) {
   }
 
   const res = await fetch(urlStr, {
-    headers: { "User-Agent": "readme-clickable-image/1.0" }
+    headers: { "User-Agent": "readme-onclick-animation/1.0" }
   });
 
   if (!res.ok) {
