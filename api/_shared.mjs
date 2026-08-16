@@ -101,20 +101,9 @@ export function config(url) {
   return { back, still, play, key, redirecting: Boolean(still && play) };
 }
 
-// Loaded on demand: a deployment in redirect mode need not carry them at all.
-let cache = null;
-export function bundled() {
-  if (cache) return cache;
-  const load = (name) => {
-    const tries = [process.cwd(), path.join(process.cwd(), ".."), "/var/task"];
-    for (const dir of tries) {
-      try { return readFileSync(path.join(dir, name)); } catch { /* next */ }
-    }
-    throw new Error(`asset not found: ${name} (looked in ${tries.join(", ")})`);
-  };
-  cache = { poster: load("poster.jpg"), scene: load("eyes-once.svg") };
-  return cache;
-}
+export const BLACK_CANVAS = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520"><rect width="100%" height="100%" fill="#000000"/></svg>'
+);
 
 // ---- the flag ---------------------------------------------------------------
 // Redis when configured. Otherwise memory, which works only because both routes

@@ -9,7 +9,7 @@
 // guarantees the click and the reload land on the same one. For a personal
 // profile - low traffic, one warm instance, two requests a second apart - that
 // is almost always true. Attach Redis (see DEPLOY.md) and it becomes always.
-import { bundled, config, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
+import { BLACK_CANVAS, config, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
 export default async function handler(req, res) {
   const url = new URL(req.url || "/", "http://localhost");
@@ -24,21 +24,19 @@ export default async function handler(req, res) {
   }
 
   if (url.pathname.endsWith("/play") || url.searchParams.get("do") === "play") {
-    await markPlaying(cfg.key);
+    if (cfg.play) {
+      await markPlaying(cfg.key);
+    }
     uncached(res);
     res.writeHead(302, { Location: cfg.back });
     return res.end();
   }
 
-  // ?play=1 forces the animation, for checking an asset without the state.
-  // The README's URL carries no query, so visitors cannot land on this.
-  const playing = url.searchParams.get("play") === "1" || await isPlaying(cfg.key);
+  // Only play if 'play' URL is present and active
+  const playing = Boolean(cfg.play) && (url.searchParams.get("play") === "1" || await isPlaying(cfg.key));
+  const targetUrl = playing ? cfg.play : cfg.still;
 
-  // Direct Proxy Mode: if still & play remote URLs are provided, fetch the bytes
-  // directly and return them with no-store headers. This saves an HTTP round-trip
-  // for GitHub's Camo proxy compared to 302 redirecting.
-  if (cfg.redirecting) {
-    const targetUrl = playing ? cfg.play : cfg.still;
+  if (targetUrl) {
     try {
       const { data, contentType } = await fetchRemoteAsset(targetUrl);
       uncached(res, { "Content-Type": contentType });
@@ -49,7 +47,7 @@ export default async function handler(req, res) {
     }
   }
 
-  const { poster, scene } = bundled();
-  uncached(res, { "Content-Type": playing ? "image/svg+xml" : "image/jpeg" });
-  res.end(req.method === "HEAD" ? undefined : (playing ? scene : poster));
+  // Fallback: missing static image -> serve black canvas
+  uncached(res, { "Content-Type": "image/svg+xml" });
+  res.end(req.method === "HEAD" ? undefined : BLACK_CANVAS);
 }
