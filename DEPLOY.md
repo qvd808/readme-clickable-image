@@ -71,6 +71,39 @@ WINDOW_MS   = 12000                         # optional: how long one click lasts
 
 Environment changes do not reach the running deployment until you redeploy.
 
+## Redirect mode, and using this for someone else's images
+
+Set both of these and `/scene` stops serving bytes and starts answering `302`
+with the address of an image in a repo:
+
+```
+STILL_URL = https://raw.githubusercontent.com/USER/REPO/main/poster.jpg
+PLAY_URL  = https://raw.githubusercontent.com/USER/REPO/main/animation.svg
+```
+
+The bytes then come off GitHub's CDN, the origin serves a few hundred bytes per
+view instead of 142 KB, and changing the animation is a push rather than a
+redeploy. The same three values can come from the query string instead, which
+is what makes this usable by anyone without an account here:
+
+```html
+<a href="https://APP/play?back=https://github.com/USER&still=STILL&play=PLAY"><img src="https://APP/scene?still=STILL&play=PLAY" width="100%" alt="..."></a>
+```
+
+`back` must be on github.com and the images must be https on a githubusercontent
+host - otherwise this is an open redirect and an open image proxy. The flag is
+keyed on a hash of the three values, so one person's click cannot fire another
+person's animation.
+
+**This mode is unproven.** `/scene` still answers `no-store`, but nobody has
+established whether GitHub's proxy honours that across a redirect or adopts the
+headers of what it lands on - `raw.githubusercontent` sends `max-age=300`. If it
+adopts them, the README sticks on a spent animation for five minutes. To find
+out: click, wait past `WINDOW_MS`, reload the page and see which image comes
+back. The poster is 1650px wide and the animation is 1100px, so
+`img.naturalWidth` in the console names the winner without any guessing.
+Unsetting the two variables reverts to serving bytes.
+
 ## Checking it worked
 
 ```bash
