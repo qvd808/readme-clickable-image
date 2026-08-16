@@ -13,6 +13,11 @@ createServer(async (req, res) => {
   const p = new URL(req.url, "http://localhost").pathname;
   console.log(`${new Date().toISOString().slice(11, 23)}  ${req.url}`);
   try {
+    if (p === "/" || p === "/index.html") {
+      const html = (await import("node:fs")).readFileSync("./index.html");
+      res.writeHead(200, { "Content-Type": "text/html" });
+      return res.end(html);
+    }
     if (p === "/play" || p === "/scene") {
       const fullUrl = `http://${req.headers.host || "localhost"}${req.url}`;
       const webReq = new Request(fullUrl, { method: req.method });

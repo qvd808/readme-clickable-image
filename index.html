@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  ==========================================================================
+  CREDIT / ATTRIBUTION  -  hidden easter egg
+
+  The character revealed by the easter egg is WONDER OF U, from
+  "JoJo's Bizarre Adventure" (Part 8: JoJolion).
+
+  JoJo's Bizarre Adventure and all of its characters are
+  copyright (c) Hirohiko Araki / Shueisha.
+
+  Reference image source:
+    https://jojo.fandom.com/wiki/Wonder_of_U
+
+  Used here as a non-commercial personal easter egg on a personal profile
+  page. All rights in the character and its depiction remain with the
+  original creator and rights holders. No affiliation with, sponsorship by,
+  or endorsement from the rights holders is implied.
+
+  Full respect and credit to Hirohiko Araki as the creator.
+  ==========================================================================
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyes</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0b0c0e; overflow: hidden; }
+  a { color: rgb(226, 235, 244); } a:hover { color: rgb(160, 176, 192); }
+  #wrap { position: relative; width: 100%; height: 100dvh; min-height: 100%; background: #0b0c0e; overflow: hidden; }
+  [data-stage] { position: absolute; inset: 0; will-change: transform; }
+  [data-stage] canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  canvas[data-sketch] { touch-action: none; }
+  canvas[data-fx] { pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <div data-stage="1">
+    <canvas data-sketch="1"></canvas>
+    <canvas data-fx="1"></canvas>
+    <div data-hit="1" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+const FACE_IMG = "data:image/webp;base64,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";
+const FACE_EYES = { lx: 0.33311, ly: 0.59664, rx: 0.58288, ry: 0.59419 };
+
+/* grain is a pure per-pixel pass, so it runs off-thread; identical math */
+const GRAIN_WORKER = `
+self.onmessage = function (e) {
+  var d = new Uint8ClampedArray(e.data.buf);
+  var cw = e.data.cw, ch = e.data.ch, G = e.data.G, night = e.data.night;
+  var s = 1234567;
+  var rnd = function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  var T0 = new Float32Array(65536), i;
+  for (i = 0; i < T0.length; i++) T0[i] = rnd();
+  var T = new Float32Array(65536), x, y;
+  for (y = 0; y < 256; y++) for (x = 0; x < 256; x++) {
+    i = y * 256 + x;
+    T[i] = (T0[i] * 2 + T0[y * 256 + ((x + 1) & 255)] + T0[(((y + 1) & 255) * 256) + x]) / 4;
+  }
+  var PR = night ? 11 : 240, PG = night ? 12 : 237, PB = night ? 14 : 228;
+  var vx = new Float32Array(cw);
+  for (x = 0; x < cw; x++) { var t = x / cw - 0.5; vx[x] = t * t; }
+  for (y = 0; y < ch; y++) {
+    var ty = y / ch - 0.5, vyv = ty * ty, row = (y & 255) << 8;
+    for (x = 0; x < cw; x++) {
+      i = (y * cw + x) << 2;
+      var n = T[row | (x & 255)];
+      var light = Math.max(0, n - 0.56) * 1.7 * G, dark = Math.max(0, 0.42 - n) * 0.2 * G;
+      var vig = 1 - (vx[x] + vyv) * (night ? 0.36 : 0.19);
+      if (night) vig *= 1 - Math.max(0, (y / ch - 0.74) / 0.26) * 0.3;
+      var r = d[i], g = d[i + 1], b = d[i + 2];
+      r += (PR - r) * light; g += (PG - g) * light; b += (PB - b) * light;
+      r = r * (1 - dark) * vig; g = g * (1 - dark) * vig; b = b * (1 - dark) * vig;
+      if (night) { var f = (n - 0.5) * 8 * G; r += f; g += f; b += f * 1.12; }
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+  }
+  self.postMessage({ buf: d.buffer }, [d.buffer]);
+};
+`;
+
+class Scene {
+  constructor(props) {
+    this.props = Object.assign(
+      { mode: "night", seed: 4211, inkStrength: 1, glow: 1, skyDensity: 1, grain: 1 },
+      props || {}
+    );
+    this.phase = 0;
+    this.figBox = null;
+    this.stage = document.querySelector('[data-stage="1"]');
+    this.canvas = this.stage.querySelector('canvas[data-sketch="1"]');
+    this.hit = this.stage.querySelector('[data-hit="1"]');
+    this.sockets = [];
+    this.aimEls = [];
+    this._tx = 0.5; this._ty = 0.5;   /* cursor target */
+    this._ex = 0.5; this._ey = 0.5;   /* eased gaze */
+    this._aimRaf = 0;
+    this._paintTok = 0;
+    this._faceImg = new Image();
+    this._faceImg.src = FACE_IMG;
+    this._aimStep = (now) => {
+      const dt = Math.min(0.05, (now - this._aimT) / 1000);
+      this._aimT = now;
+      const k = 1 - Math.exp(-dt / 0.09);   /* ~90ms time constant */
+      this._ex += (this._tx - this._ex) * k;
+      this._ey += (this._ty - this._ey) * k;
+      this.applyAim();
+      if (Math.abs(this._tx - this._ex) > 0.0004 ||
+          Math.abs(this._ty - this._ey) > 0.0004) {
+        this._aimRaf = requestAnimationFrame(this._aimStep);
+      } else {
+        this._ex = this._tx; this._ey = this._ty;
+        this.applyAim();
+        this._aimRaf = 0;
+      }
+    };
+    this.hit.addEventListener("click", () =>
+      this.phase ? this.resetCalamity() : this.startCalamity());
+  }
+
+  cv() { return this.canvas; }
+
+  fadeEyes(v) {
+    for (const s of this.sockets) s.style.opacity = v;
+  }
+
+  mount() {
+    this._resize = () => {
+      clearTimeout(this._t);
+      this._t = setTimeout(() => this.paint(), 220);
+    };
+    /* one resize source, not two: ResizeObserver already covers window resize */
+    if (window.ResizeObserver) {
+      this._ro = new ResizeObserver(this._resize);
+      this._ro.observe(this.stage);
+    } else {
+      window.addEventListener("resize", this._resize);
+    }
+    this._move = (ev) => {
+      const p = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+      this.aimEyes(p.clientX / window.innerWidth, p.clientY / window.innerHeight);
+    };
+    window.addEventListener("mousemove", this._move, { passive: true });
+    window.addEventListener("touchmove", this._move, { passive: true });
+    this.paint();
+  }
+
+  destroy() {
+    if (this._ro) this._ro.disconnect();
+    else window.removeEventListener("resize", this._resize);
+    window.removeEventListener("mousemove", this._move);
+    window.removeEventListener("touchmove", this._move);
+    clearTimeout(this._t);
+    if (this._aimRaf) cancelAnimationFrame(this._aimRaf);
+  }
+
+  setPhase(p) { this.phase = p; this.syncHit(); }
+
+  /* rebuild the eye elements after a repaint */
+  syncEyes(spots, figBox) {
+    this.figBox = figBox;
+    for (const s of this.sockets) s.remove();
+    this.sockets = [];
+    this.aimEls = [];
+    for (const e of spots) {
+      const d = e.r * 2;
+      const sock = document.createElement("div");
+      sock.setAttribute("data-eye-socket", "1");
+      sock.style.cssText =
+        "position:absolute;left:" + (e.x - e.r) + "px;top:" + (e.y - e.r) +
+        "px;width:" + d + "px;height:" + d + "px;pointer-events:none";
+      const glow = this.layer(d * 0.92, (d * 0.086).toFixed(2),
+        "radial-gradient(circle, #cfe8ff 0%, #7db4f5 22%, #3a6fb8 45%, rgba(32,74,140,0.42) 62%, rgba(24,56,110,0) 80%)",
+        "data-eye-glow");
+      const iris = this.layer(d * 0.52, (d * 0.114).toFixed(2),
+        "radial-gradient(circle, #ffffff 0%, #eaf6ff 30%, rgba(200,230,255,0.5) 55%, rgba(170,210,255,0) 75%)",
+        "data-eye-iris");
+      sock.appendChild(glow);
+      sock.appendChild(iris);
+      this.stage.appendChild(sock);
+      this.sockets.push(sock);
+      /* k = d * range / 100; halo sweeps 35, iris 65 */
+      this.aimEls.push({ el: glow, k: d * 0.35 }, { el: iris, k: d * 0.65 });
+    }
+    this.syncHit();
+    this.applyAim();
+  }
+
+  layer(size, blur, bg, attr) {
+    const el = document.createElement("div");
+    el.setAttribute(attr, "1");
+    el.style.cssText =
+      "position:absolute;left:50%;top:50%;width:" + size + "px;height:" + size +
+      "px;border-radius:50%;background:" + bg + ";filter:blur(" + blur +
+      "px);transform:translate(-50%,-50%);will-change:transform";
+    return el;
+  }
+
+  syncHit() {
+    const h = this.hit, b = this.figBox;
+    if (this.phase) {
+      h.style.cssText = "position:absolute;inset:0;cursor:pointer;background:transparent";
+      h.title = "back";
+    } else if (b) {
+      h.style.cssText =
+        "position:absolute;left:" + b.x + "px;top:" + b.y + "px;width:" + b.w +
+        "px;height:" + b.h + "px;cursor:pointer;background:transparent";
+      h.title = "look down";
+    } else {
+      h.style.cssText = "display:none";
+    }
+  }
+
+  /* cursor parallax: the iris outruns the halo, as in the reference sketch.
+     The gaze eases toward the cursor instead of snapping to it. Exponential
+     smoothing is framerate-independent, and the loop stops itself once
+     settled, so an idle page schedules no frames at all. */
+  aimEyes(fx, fy) {
+    this._tx = fx; this._ty = fy;
+    if (this._aimRaf) return;
+    this._aimT = performance.now();
+    this._aimRaf = requestAnimationFrame(this._aimStep);
+  }
+
+  applyAim() {
+    const dx = this._ex - 0.5, dy = this._ey - 0.5;
+    for (const a of this.aimEls) {
+      a.el.style.transform =
+        "translate(-50%,-50%) translate(" + (a.k * dx) + "px," + (a.k * dy) + "px)";
+    }
+  }
+
+  /* --- grain, offloaded to a worker so the main thread stays free --- */
+  grainPassAsync(c) {
+    const G = this.props.grain == null ? 1 : this.props.grain;
+    if (G <= 0.001) return Promise.resolve();
+    const ctx = this.vctx, cw = c.width, ch = c.height;
+    if (!cw || !ch) return Promise.resolve();
+    if (!this._gw && window.Worker && !this._gwFailed) {
+      try {
+        this._gw = new Worker(URL.createObjectURL(
+          new Blob([GRAIN_WORKER], { type: "text/javascript" })));
+      } catch (err) { this._gwFailed = true; }
+    }
+    if (!this._gw) { this.grainPass(c); return Promise.resolve(); }
+    const img = ctx.getImageData(0, 0, cw, ch);
+    const w = this._gw;
+    return new Promise((resolve) => {
+      const fallback = () => {
+        w.onmessage = null; w.onerror = null;
+        try { this.grainPass(c); } catch (err) {}
+        resolve();
+      };
+      const timer = setTimeout(fallback, 4000);
+      w.onmessage = (e) => {
+        clearTimeout(timer);
+        w.onmessage = null; w.onerror = null;
+        ctx.putImageData(new ImageData(new Uint8ClampedArray(e.data.buf), cw, ch), 0, 0);
+        resolve();
+      };
+      w.onerror = () => { clearTimeout(timer); this._gw = null; this._gwFailed = true; fallback(); };
+      w.postMessage({ buf: img.data.buffer, cw: cw, ch: ch, G: G, night: this.night },
+                    [img.data.buffer]);
+    });
+  }
+
+  /* --- debris, baked once per seed step instead of re-inked every frame --- */
+  bakeDebris(impact, pw) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const maxL = pw * 0.75 * 1.4;
+    /* debris only flies upward (angles -3.0..-0.15 rad), so the box is wide
+       and shallow rather than square, and the backing store is capped so a
+       wide display cannot allocate tens of MB of sprite */
+    const padX = pw * 0.5 + maxL + 12, padT = padX, padB = pw * 0.45;
+    const w = Math.ceil(padX * 2), h = Math.ceil(padT + padB);
+    const bs = Math.min(dpr, 1600 / Math.max(w, h));
+    const sprites = [];
+    for (let s = 0; s < 4; s++) {
+      const cnv = document.createElement("canvas");
+      cnv.width = Math.round(w * bs);
+      cnv.height = Math.round(h * bs);
+      const cx2 = cnv.getContext("2d");
+      cx2.setTransform(bs, 0, 0, bs, 0, 0);
+      cx2.translate(padX, padT);
+      /* same RNG call order as the original debris(), so each seed step
+         produces the same shapes; only length and alpha are normalised out */
+      this.withCtx(cx2, 9100 + s, () => {
+        for (let i = 0; i < 22; i++) {
+          const a = this.r(-3.0, -0.15), L = pw * this.r(0.15, 0.75) * 1.4;
+          const x = this.g() * pw * 0.2, y = pw * 0.12;
+          this.stroke([[x, y], [x + Math.cos(a) * L, y + Math.sin(a) * L]],
+            { alpha: 0.9, width: this.r(1, 2.4), wobble: 0.5, taper: 0.9, grain: 0.3 });
+        }
+      });
+      sprites.push(cnv);
+    }
+    this._debris = { sprites: sprites, padX: padX, padT: padT, w: w, h: h };
+  }
+
+  drawDebris(fx, impact, p) {
+    const D = this._debris;
+    if (!D) return;
+    const k = (0.4 + p) / 1.4;
+    fx.save();
+    fx.globalAlpha = Math.max(0, Math.min(1, 1 - p));
+    fx.translate(impact.x, impact.y);
+    fx.scale(k, k);
+    fx.drawImage(D.sprites[Math.min(3, Math.floor(p * 4))],
+                 -D.padX, -D.padT, D.w, D.h);
+    fx.restore();
+  }
+
+  /* ---------- randomness: seeded, gaussian-biased ---------- */
+  rngFrom(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = (s + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  r(a, b) { return a + this.R() * (b - a); }
+  g() { return (this.R() + this.R() + this.R() - 1.5) / 0.75; }   /* ~normal, |v| mostly < 1 */
+  hash1(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  n1(x, o) {
+    const xi = Math.floor(x), xf = x - xi;
+    const a = this.hash1(xi + o * 71.3), b = this.hash1(xi + 1 + o * 71.3);
+    const u = xf * xf * (3 - 2 * xf);
+    return a + (b - a) * u;
+  }
+
+  /* ---------- geometry helpers ---------- */
+  spline(pts, steps) {
+    if (pts.length < 3) return pts.slice();
+    const out = [], n = pts.length;
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(n - 1, i + 2)];
+      for (let j = 0; j < steps; j++) {
+        const t = j / steps, t2 = t * t, t3 = t2 * t;
+        out.push([
+          0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+          0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+        ]);
+      }
+    }
+    out.push(pts[n - 1].slice(0, 2));
+    return out;
+  }
+  densify(pts, sp) {
+    const out = [[pts[0][0], pts[0][1]]];
+    let cur = [pts[0][0], pts[0][1]], i = 1, rem = sp;
+    let guard = 0;
+    while (i < pts.length && guard++ < 20000) {
+      const b = pts[i], dx = b[0] - cur[0], dy = b[1] - cur[1], d = Math.hypot(dx, dy);
+      if (d < 1e-6) { i++; continue; }
+      if (d < rem) { rem -= d; cur = [b[0], b[1]]; i++; }
+      else { const t = rem / d; cur = [cur[0] + dx * t, cur[1] + dy * t]; out.push([cur[0], cur[1]]); rem = sp; }
+    }
+    const l = pts[pts.length - 1];
+    out.push([l[0], l[1]]);
+    return out;
+  }
+  pathLen(P) { let s = 0; for (let i = 1; i < P.length; i++) s += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); return s; }
+  pt(P, t) {
+    const n = P.length, f = Math.max(0, Math.min(n - 1.001, t * (n - 1)));
+    const i = Math.floor(f), fr = f - i, a = P[i], b = P[Math.min(n - 1, i + 1)];
+    let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+    const l = Math.hypot(nx, ny) || 1;
+    return { x: a[0] + (b[0] - a[0]) * fr, y: a[1] + (b[1] - a[1]) * fr, nx: nx / l, ny: ny / l };
+  }
+
+  /* ---------- the pencil ---------- */
+  stroke(pts, o) {
+    o = o || {};
+    const ctx = this.ctx, u = this.u;
+    const alpha = (o.alpha == null ? 0.6 : o.alpha) * this.ink;
+    const width = o.width == null ? 1 : o.width;
+    const wobble = o.wobble == null ? 1 : o.wobble;
+    const passes = o.passes == null ? 1 : o.passes;
+    const taper = o.taper == null ? 1 : o.taper;
+    const grain = o.grain == null ? 0.5 : o.grain;
+    const breakUp = o.breakUp == null ? 0.3 : o.breakUp;
+    if (pts.length < 2 || alpha < 0.006) return;
+    const P = this.densify(pts, Math.max(1.6, 2.4 * u));
+    if (P.length < 2) return;
+    const total = Math.max(1, this.pathLen(P));
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    for (let pass = 0; pass < passes; pass++) {
+      const ph = Math.floor(this.R() * 900);
+      const ph2 = Math.floor(this.R() * 900);
+      const lateral = pass === 0 ? 0 : this.g() * 1.15 * u * width;
+      const amp = wobble * u;
+      const D = [];
+      let acc = 0;
+      for (let i = 0; i < P.length; i++) {
+        const p = P[i];
+        if (i > 0) acc += Math.hypot(p[0] - P[i - 1][0], p[1] - P[i - 1][1]);
+        const t = acc / total;
+        const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)];
+        let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+        const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+        const w = (this.n1(t * 3.1 + ph, 7) - 0.5) * 2 * amp
+                + (this.n1(t * 8.7 + ph, 13) - 0.5) * amp * 0.4 + lateral;
+        D.push([p[0] + nx * w, p[1] + ny * w, t]);
+      }
+      const passA = pass === 0 ? 1 : 0.62;
+      for (let i = 1; i < D.length; i++) {
+        const A = D[i - 1], B = D[i], t = B[2];
+        let e = Math.min(1, t / 0.11) * Math.min(1, (1 - t) / 0.10);
+        e = 1 - taper * (1 - Math.pow(e, 0.62));
+        const press = 0.58 + 0.42 * this.n1(t * 5.5 + ph2, 21);
+        const lift = this.n1(t * 13 + ph2, 33) < breakUp * 0.42 ? 0.22 : 1;
+        const a = alpha * e * press * lift * passA;
+        if (a < 0.005) continue;
+        ctx.strokeStyle = "rgba(" + this.inkRGB + "," + Math.min(1, a) + ")";
+        ctx.lineWidth = Math.max(0.35, width * u * (0.8 + 0.4 * this.n1(t * 6.3 + ph, 41)));
+        ctx.beginPath();
+        ctx.moveTo(A[0], A[1]);
+        ctx.lineTo(B[0], B[1]);
+        ctx.stroke();
+      }
+      if (grain > 0) {
+        const count = Math.floor((total / Math.max(2, 3 * u)) * grain);
+        for (let k = 0; k < count; k++) {
+          const idx = 1 + Math.floor(this.R() * (D.length - 1));
+          const A = D[idx - 1], B = D[idx];
+          let nx = -(B[1] - A[1]), ny = B[0] - A[0];
+          const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+          const off = this.g() * (0.55 + width * 0.75) * u;
+          let e = Math.min(1, B[2] / 0.11) * Math.min(1, (1 - B[2]) / 0.10);
+          const a = alpha * (0.18 + 0.42 * this.R()) * (1 - taper * (1 - e));
+          if (a < 0.006) continue;
+          ctx.fillStyle = "rgba(" + this.inkRGB + "," + Math.min(1, a) + ")";
+          ctx.beginPath();
+          ctx.arc(B[0] + nx * off, B[1] + ny * off, Math.max(0.28, u * this.r(0.22, 0.5)), 0, 6.2832);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  /* a single hand gesture between two points: overshoot, bow, wobble */
+  gLine(a, b, o) {
+    o = o || {};
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    const ov = o.over == null ? 1 : o.over;
+    const o1 = ov * this.u * Math.abs(this.g()) * 3.2;
+    const o2 = ov * this.u * Math.abs(this.g()) * 3.2;
+    const A = [a[0] - ux * o1, a[1] - uy * o1];
+    const B = [b[0] + ux * o2, b[1] + uy * o2];
+    const bowAmt = (o.bow == null ? 1 : o.bow) * this.g() * Math.min(L * 0.045, 5 * this.u);
+    const M = [(A[0] + B[0]) / 2 + nx * bowAmt, (A[1] + B[1]) / 2 + ny * bowAmt];
+    this.stroke(this.spline([A, M, B], 9), o);
+  }
+
+  blocked(x, y) {
+    for (const c of this.clear) {
+      if ((x - c.x) * (x - c.x) + (y - c.y) * (y - c.y) < c.r * c.r) return true;
+    }
+    return false;
+  }
+
+  hatchAlong(path, o) {
+    const P = this.densify(path, Math.max(2, 3 * this.u));
+    const band = o.band, count = o.count;
+    for (let i = 0; i < count; i++) {
+      const t = this.r(o.t0 == null ? 0 : o.t0, o.t1 == null ? 1 : o.t1);
+      const p = this.pt(P, t);
+      const d = Math.pow(this.R(), o.bias == null ? 1.7 : o.bias) * band;
+      const side = o.side == null ? 1 : o.side;
+      const x = p.x + p.nx * side * d + this.g() * 2.2 * this.u;
+      const y = p.y + p.ny * side * d + this.g() * 2.2 * this.u;
+      if (this.blocked(x, y)) continue;
+      const ang = (typeof o.angle === "function" ? o.angle(x, y) : o.angle) + this.g() * (o.spray == null ? 0.11 : o.spray);
+      const L = o.len * this.r(0.45, 1.25);
+      const fade = 1 - (o.fade == null ? 0.7 : o.fade) * (d / band);
+      this.stroke([[x, y], [x + Math.cos(ang) * L, y + Math.sin(ang) * L]], {
+        alpha: o.alpha * fade * this.r(0.55, 1.25) * this.hatchInk,
+        width: (o.width || 1) * this.r(0.7, 1.5),
+        wobble: 0.45, taper: 0.85, grain: 0.18, breakUp: 0.3
+      });
+    }
+  }
+
+  hatchBox(x0, y0, x1, y1, o) {
+    for (let i = 0; i < o.count; i++) {
+      const x = this.r(x0, x1), y = this.r(y0, y1);
+      if (this.blocked(x, y)) continue;
+      const ang = o.angle + this.g() * 0.14;
+      const L = o.len * this.r(0.4, 1.3);
+      this.stroke([[x, y], [x + Math.cos(ang) * L, y + Math.sin(ang) * L]], {
+        alpha: o.alpha * this.r(0.4, 1.2) * this.hatchInk, width: (o.width || 0.85) * this.r(0.6, 1.4),
+        wobble: 0.5, taper: 0.9, grain: 0.16, breakUp: 0.32
+      });
+    }
+  }
+
+  fillPoly(poly, alpha) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.moveTo(poly[0][0], poly[0][1]);
+    for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i][0], poly[i][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------- scene parts ---------- */
+  background() {
+    const ctx = this.vctx, W = this.W, H = this.H;
+    ctx.fillStyle = this.paper;
+    ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 7; i++) {
+      const gx = this.r(0, W), gy = this.r(0, H), rr = this.r(0.25, 0.7) * Math.max(W, H);
+      const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, rr);
+      const alt = this.R() > 0.5;
+      if (this.night) {
+        gr.addColorStop(0, alt ? "rgba(96,116,146,0.1)" : "rgba(44,48,58,0.18)");
+        gr.addColorStop(1, "rgba(0,0,0,0)");
+      } else {
+        gr.addColorStop(0, alt ? "rgba(214,206,188,0.16)" : "rgba(255,255,255,0.2)");
+        gr.addColorStop(1, "rgba(255,255,255,0)");
+      }
+      ctx.fillStyle = gr;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  skyFlow(x, y) {
+    let vx = 0.85, vy = 0.46 * Math.sin(x * 0.0042 + y * 0.0062) + 0.26 * Math.sin(y * 0.0095 + 1.7);
+    for (const v of this.vort) {
+      const dx = x - v.x, dy = (y - v.y) * 1.7;
+      const d2 = dx * dx + dy * dy, d = Math.sqrt(d2) + 1;
+      const core = 0.34 * v.r;
+      const f = v.s * Math.exp(-d2 / (2 * v.r * v.r)) * (1 - Math.exp(-d2 / (2 * core * core)));
+      vx += (-dy / d) * f * v.r * 0.115;
+      vy += (dx / d) * f * v.r * 0.115;
+    }
+    const sb = this.skyBottom;
+    vy += 0.55 * Math.exp(-Math.max(0, y) / (0.13 * sb));
+    vy -= 0.55 * Math.exp(-Math.max(0, sb - y) / (0.13 * sb));
+    const l = Math.hypot(vx, vy) || 1;
+    return [vx / l, vy / l];
+  }
+
+  streamline(x, y, len) {
+    const step = 3.2 * this.u, pts = [];
+    const top = -0.03 * this.H, bot = this.skyBottom * 1.03;
+    let n = Math.floor(len / step);
+    for (let i = 0; i < n; i++) {
+      pts.push([x, y]);
+      const v = this.skyFlow(x, y);
+      x += v[0] * step; y += v[1] * step;
+      if (y < top || y > bot || x < -0.06 * this.W || x > 1.06 * this.W) break;
+    }
+    return pts;
+  }
+
+  sky() {
+    const W = this.W, H = this.H, sb = this.skyBottom;
+    const cell = Math.max(4, Math.min(W, H) * 0.014);
+    this.skyGrid = { c: cell, w: Math.ceil(W / cell) + 2, h: Math.ceil(sb / cell) + 2, a: null };
+    this.skyGrid.a = new Uint8Array(this.skyGrid.w * this.skyGrid.h);
+    this.vort = [];
+    const nv = Math.max(5, Math.round(7 * Math.sqrt((W * sb) / (480 * 440))) + Math.floor(this.R() * 3));
+    for (let i = 0; i < nv; i++) {
+      this.vort.push({
+        x: (-0.06 + 1.12 * ((i + this.R()) / nv)) * W,
+        y: this.r(0.04, 0.94) * sb,
+        r: this.r(0.09, 0.306) * sb,
+        s: (this.R() > 0.5 ? 1 : -1) * this.r(0.9, 1.75)
+      });
+    }
+    const dens = this.props.skyDensity == null ? 1 : this.props.skyDensity;
+    const n = Math.max(8, Math.round(64 * dens * Math.sqrt((W * sb) / (480 * 440))));
+    const minD = Math.min(W, H);
+    for (let i = 0; i < n; i++) {
+      const sx = (-0.05 + 1.1 * ((i % n + this.R()) / n)) * W;
+      const sy = this.R() * sb * 0.96;
+      const len = minD * this.r(0.35, 2.1);
+      const line = this.streamline(sx, sy, len);
+      if (line.length < 8) continue;
+      this.markSky(line);
+      const depth = 1 - sy / sb;
+      const base = 0.3 + 0.34 * depth;
+      this.stroke(line, { alpha: base + this.r(0, 0.16), width: this.r(0.7, 1.05), wobble: 0.5, taper: 1, grain: 0.4, breakUp: 0.3 });
+      if (this.R() < 0.58) {
+        const off = this.r(4, 17) * this.u * (this.R() > 0.5 ? 1 : -1);
+        const trim = Math.floor(line.length * this.r(0.05, 0.22));
+        const par = [];
+        for (let k = trim; k < line.length - Math.floor(trim * 0.7); k++) {
+          const a = line[Math.max(0, k - 1)], b = line[Math.min(line.length - 1, k + 1)];
+          let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+          const l = Math.hypot(nx, ny) || 1;
+          par.push([line[k][0] + (nx / l) * off, line[k][1] + (ny / l) * off]);
+        }
+        if (par.length > 6) this.stroke(par, { alpha: base * 0.85, width: this.r(0.65, 0.95), wobble: 0.55, taper: 1, grain: 0.35, breakUp: 0.34 });
+      }
+    }
+    const ne = 1 + Math.floor(this.R() * 2);
+    for (let i = 0; i < ne; i++) {
+      const rad = minD * this.r(0.022, 0.048);
+      let ex = 0, ey = 0, best = 1e9;
+      for (let tries = 0; tries < 90; tries++) {
+        const px = this.r(0.12, 0.9) * W, py = this.r(0.12, 0.85) * sb;
+        const score = this.skyLoad(px, py, rad * 2.1);
+        if (score < best) { best = score; ex = px; ey = py; }
+        if (best === 0) break;
+      }
+      this.eddy(ex, ey, rad, this.r(-0.6, 0.6));
+      const ring = [];
+      for (let k = 0; k <= 16; k++) {
+        const aa = 6.283 * (k / 16);
+        ring.push([ex + Math.cos(aa) * rad * 1.15, ey + Math.sin(aa) * rad * 1.15]);
+      }
+      this.markSky(ring);
+      this.markSky([[ex, ey]]);
+    }
+    this.moonAndStars();
+  }
+
+  markSky(pts) {
+    const g = this.skyGrid;
+    if (!g) return;
+    for (const p of pts) {
+      const cx = Math.round(p[0] / g.c), cy = Math.round(p[1] / g.c);
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const x = cx + dx, y = cy + dy;
+          if (x >= 0 && y >= 0 && x < g.w && y < g.h) g.a[y * g.w + x] = 1;
+        }
+      }
+    }
+  }
+
+  skyLoad(x, y, rad) {
+    const g = this.skyGrid;
+    if (!g) return 0;
+    const r = Math.ceil(rad / g.c);
+    const cx = Math.round(x / g.c), cy = Math.round(y / g.c);
+    let n = 0;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const px = cx + dx, py = cy + dy;
+        if (px < 0 || py < 0 || px >= g.w || py >= g.h) { n++; continue; }
+        if (g.a[py * g.w + px]) n++;
+      }
+    }
+    return n;
+  }
+
+  skyFree(x, y, rad) {
+    const g = this.skyGrid;
+    if (!g) return true;
+    const r = Math.ceil(rad / g.c);
+    const cx = Math.round(x / g.c), cy = Math.round(y / g.c);
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const px = cx + dx, py = cy + dy;
+        if (px < 0 || py < 0 || px >= g.w || py >= g.h) continue;
+        if (g.a[py * g.w + px]) return false;
+      }
+    }
+    return true;
+  }
+
+  moonAndStars() {
+    const W = this.W, sb = this.skyBottom, minD = Math.min(W, this.H);
+    /* moon: one open disc with a crescent shadow arc, in clear sky */
+    const mr = minD * this.r(0.045, 0.062);
+    let mx = 0, my = 0, best = 1e9;
+    for (let tries = 0; tries < 260; tries++) {
+      const cxx = this.r(0.03, 0.2) * W, cyy = this.r(0.05, 0.34) * sb;
+      const score = this.skyLoad(cxx, cyy, mr * 1.7);
+      if (score < best) { best = score; mx = cxx; my = cyy; }
+      if (best === 0) break;
+    }
+    {
+      const halo = [];
+      for (let i = 0; i <= 40; i++) {
+        const a = 6.283 * (i / 40);
+        halo.push([mx + Math.cos(a) * mr * 1.3, my + Math.sin(a) * mr * 1.3]);
+      }
+      this.fillPoly(halo, 1);
+      const disc = [];
+      const st = this.R() * 6.283;
+      for (let i = 0; i <= 60; i++) {
+        const a = st + 6.283 * (i / 60) * this.r(0.99, 1.02);
+        const rr = mr * (1 + 0.04 * (this.n1(i * 0.3, 3) - 0.5));
+        disc.push([mx + Math.cos(a) * rr, my + Math.sin(a) * rr]);
+      }
+      this.stroke(disc, { alpha: 0.6, width: 1.15, wobble: 0.25, taper: 0.3, grain: 0.45, breakUp: 0.2 });
+      const cres = [], a0 = this.r(-0.5, 0.5);
+      for (let i = 0; i <= 26; i++) {
+        const a = a0 + 1.15 + 3.4 * (i / 26);
+        cres.push([mx + Math.cos(a) * mr * 0.62 + mr * 0.3, my + Math.sin(a) * mr * 0.92]);
+      }
+      this.stroke(cres, { alpha: 0.34, width: 0.9, wobble: 0.3, taper: 0.6, grain: 0.35 });
+      /* everything below runs on its own stream so the scene layout stays put */
+      const mainR = this.R;
+      this.R = this.rngFrom(90210);
+      if (this.night) {
+        const g2 = this.ctx.createRadialGradient(mx, my, mr * 0.25, mx, my, mr * 3.1);
+        g2.addColorStop(0, "rgba(" + this.inkRGB + ",0.26)");
+        g2.addColorStop(0.34, "rgba(" + this.inkRGB + ",0.12)");
+        g2.addColorStop(0.62, "rgba(" + this.inkRGB + ",0.04)");
+        g2.addColorStop(1, "rgba(" + this.inkRGB + ",0)");
+        this.ctx.save();
+        this.ctx.fillStyle = g2;
+        this.ctx.fillRect(mx - mr * 3.1, my - mr * 3.1, mr * 6.2, mr * 6.2);
+        this.ctx.restore();
+      }
+      this.stroke(disc, { alpha: this.night ? 0.8 : 0.3, width: this.night ? 1.6 : 1.1, wobble: 0.22, taper: 0.25, grain: 0.5, breakUp: 0.12, passes: 2 });
+      const lb = [], la = this.r(-0.6, 0.6);
+      for (let i = 0; i <= 22; i++) {
+        const aa = la + 0.5 + 2.1 * (i / 22);
+        lb.push([mx + Math.cos(aa) * mr * 0.97, my + Math.sin(aa) * mr * 0.97]);
+      }
+      this.stroke(lb, { alpha: this.night ? 0.55 : 0.28, width: 1.5, wobble: 0.2, taper: 0.85, grain: 0.4 });
+      this.R = mainR;
+      this.markSky(disc);
+      for (let ring = 0; ring < 3; ring++) {
+        const rr2 = mr * (1.6 + ring * 0.7), pts = [];
+        for (let k = 0; k < 26; k++) {
+          const aa = 6.283 * (k / 26);
+          pts.push([mx + Math.cos(aa) * rr2, my + Math.sin(aa) * rr2]);
+        }
+        this.markSky(pts);
+      }
+    }
+    /* stars: own stream, so tweaking them never re-rolls the landscape */
+    const starR = this.R;
+    this.R = this.rngFrom(31337);
+    const n = Math.round(40 * Math.sqrt((W * sb) / (480 * 440)));
+    for (let i = 0; i < n; i++) {
+      let sxp = 0, syp = 0, ok = false;
+      for (let tries = 0; tries < 40 && !ok; tries++) {
+        sxp = this.r(0.01, 0.99) * W;
+        syp = this.r(0.02, 0.92) * sb;
+        if (this.skyLoad(sxp, syp, minD * 0.014) === 0) ok = true;
+      }
+      if (!ok) continue;
+      const a = this.r(0.45, 0.85);
+      const kind = this.R();
+      if (kind < 0.22) {
+        /* the doodled five-point star: one continuous stroke, small */
+        const rr = minD * this.r(0.008, 0.015);
+        const rot = -1.5708 + this.g() * 0.22;
+        const order = [0, 2, 4, 1, 3, 0];
+        const pts = order.map((k) => {
+          const aa = rot + k * 1.2566;
+          const rj = rr * this.r(0.9, 1.1);
+          return [sxp + Math.cos(aa) * rj, syp + Math.sin(aa) * rj];
+        });
+        pts.push([pts[1][0] + this.g() * rr * 0.12, pts[1][1] + this.g() * rr * 0.12]);
+        this.stroke(pts, { alpha: a * this.r(0.9, 1.15), width: this.r(1.1, 1.5), wobble: 0.22, taper: 0.35, grain: 0.45, breakUp: 0.14 });
+      } else if (kind < 0.62) {
+        const L = minD * this.r(0.008, 0.02);
+        const rot = this.r(0, 1.5);
+        this.stroke([[sxp - Math.cos(rot) * L, syp - Math.sin(rot) * L], [sxp + Math.cos(rot) * L, syp + Math.sin(rot) * L]], { alpha: a, width: 0.85, wobble: 0.15, taper: 1, grain: 0.2 });
+        this.stroke([[sxp - Math.cos(rot + 1.57) * L * 0.7, syp - Math.sin(rot + 1.57) * L * 0.7], [sxp + Math.cos(rot + 1.57) * L * 0.7, syp + Math.sin(rot + 1.57) * L * 0.7]], { alpha: a * 0.8, width: 0.8, wobble: 0.15, taper: 1, grain: 0.2 });
+      } else {
+        const L = minD * this.r(0.002, 0.005);
+        this.stroke([[sxp - L, syp], [sxp + L, syp]], { alpha: a * 0.9, width: 1.0, wobble: 0.1, taper: 0.4, grain: 0.2 });
+      }
+      this.markSky([[sxp, syp]]);
+    }
+    this.R = starR;
+  }
+
+  eddy(cx, cy, rad, rot) {
+    const n = 2 + Math.floor(this.R() * 3);
+    for (let k = 0; k < n; k++) {
+      const rr = rad * (1 - k * 0.27), sq = this.r(0.4, 0.72);
+      const start = this.R() * 6.283, turns = this.r(0.94, 1.1), steps = 46;
+      const pts = [];
+      for (let i = 0; i <= steps; i++) {
+        const a = start + turns * 6.283 * (i / steps);
+        const r2 = rr * (1 + 0.07 * (this.n1(i * 0.28 + k * 13, 5) - 0.5));
+        const ex = Math.cos(a) * r2, ey = Math.sin(a) * r2 * sq;
+        pts.push([cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot)]);
+      }
+      this.stroke(pts, { alpha: this.r(0.3, 0.48), width: this.r(0.7, 0.95), wobble: 0.32, taper: 0.5, grain: 0.35, breakUp: 0.26 });
+    }
+  }
+
+  distantRidge() {
+    const W = this.W, top = this.mesaTop;
+    for (let k = 0; k < 2; k++) {
+      const pts = [];
+      const n = 6 + Math.floor(this.R() * 4);
+      const baseY = top + (k === 0 ? -this.H * 0.035 : this.H * 0.01);
+      for (let i = 0; i <= n; i++) {
+        pts.push([-0.05 * W + (1.1 * W * i) / n, baseY + this.g() * this.H * 0.035 - this.H * 0.02 * Math.sin((i / n) * 3.1)]);
+      }
+      const sp = this.spline(pts, 12);
+      this.stroke(sp, { alpha: this.r(0.2, 0.34), width: this.r(0.85, 1.1), wobble: 0.7, taper: 1, grain: 0.3, breakUp: 0.3 });
+      if (this.R() < 0.7) this.stroke(sp, { alpha: 0.16, width: 0.8, wobble: 1.4, taper: 1, grain: 0.2, breakUp: 0.4 });
+    }
+  }
+
+  mesas() {
+    const W = this.W, top = this.mesaTop, base = this.horizon;
+    const bh = base - top;
+    this.mesaBH = bh;
+    const list = [];
+    let x = -0.12 * W;
+    let guard = 0;
+    while (x < W * 1.04 && guard++ < 80) {
+      const kind = this.R();
+      const bu = Math.min(W * 0.17, bh * 0.9);
+      let w, h;
+      if (kind < 0.14) { w = bu * this.r(1.1, 1.8); h = bh * this.r(0.3, 0.6); }
+      else if (kind < 0.4) { w = bu * this.r(0.3, 0.62); h = bh * this.r(0.16, 0.42); }
+      else { w = bu * this.r(0.5, 1.1); h = Math.min(bh * this.r(0.5, 1.15), w * this.r(0.9, 1.55)); }
+      const depth = this.R();
+      h *= 0.72 + 0.4 * depth;
+      let by = base + (depth - 0.8) * bh * 0.26;
+      h = Math.min(h, by - (top * 0.8 + this.H * 0.022));
+      if (h < bh * 0.4) by = Math.min(by, base - bh * this.r(0.02, 0.14));
+      list.push({ x: x, w: w, h: h, depth: depth, base: by });
+      x += w * this.r(0.35, 0.85) + (this.R() < 0.2 ? W * this.r(0.01, 0.05) : 0);
+    }
+    list.sort((a, b) => a.depth - b.depth);
+    for (const b of list) this.mesa(b, b.base);
+  }
+
+  mesa(b, base) {
+    const w = b.w, h = b.h, x = b.x, d = b.depth;
+    const y0 = base - h;
+    const tilt = this.g() * h * 0.07;
+    const prof = [[x, y0 + this.g() * h * 0.02]];
+    const nst = Math.floor(this.R() * 2.7);
+    let lastX = x, lastY = prof[0][1];
+    for (let s = 0; s < nst; s++) {
+      const tx = x + w * this.r(0.18, 0.86);
+      if (tx <= lastX + w * 0.08) continue;
+      prof.push([tx, lastY + tilt * ((tx - x) / w)]);
+      lastY = lastY + (this.R() < 0.5 ? -1 : 1) * h * this.r(0.05, 0.17);
+      prof.push([tx + this.g() * w * 0.02, lastY]);
+      lastX = tx;
+    }
+    prof.push([x + w, lastY + tilt * 0.5 + this.g() * h * 0.02]);
+    if (this.R() < 0.38) {
+      const pe = prof[prof.length - 1];
+      prof.splice(prof.length - 1, 0, [pe[0] - w * this.r(0.12, 0.34), pe[1]]);
+      pe[1] += h * this.r(0.07, 0.2);
+    }
+    if (this.R() < 0.32) {
+      const p0 = prof[0];
+      prof.splice(1, 0, [p0[0] + w * this.r(0.12, 0.34), p0[1]]);
+      p0[1] += h * this.r(0.07, 0.2);
+    }
+    const bot = base + this.H * 0.02;
+    this.fillPoly([[x, bot]].concat(prof, [[x + w, bot]]), 1);
+
+    const alpha = (0.52 + 0.48 * d) * (this.night ? 0.72 : 1);
+    const width = 1.0 + 0.95 * d;
+    const showTop = h > this.mesaBH * 0.34 ? this.R() < 0.8 : this.R() < 0.3;
+    if (showTop) {
+      const dir = this.R() < 0.35 ? (this.R() < 0.5 ? 1 : -1) : (x + w / 2 < this.W / 2 ? 1 : -1);
+      const tdx = dir * w * this.r(0.18, 0.42), tdy = -h * this.r(0.07, 0.19);
+      const back = prof.map((p) => [p[0] + tdx, p[1] + tdy]);
+      this.fillPoly(prof.concat(back.slice().reverse()), 1);
+      this.stroke(this.spline(back, 6), { alpha: alpha * 0.8, width: width * 0.85, wobble: 0.6, taper: 1, grain: 0.35, breakUp: 0.3 });
+      this.gLine(prof[0], back[0], { alpha: alpha * 0.8, width: width * 0.8, wobble: 0.5, grain: 0.3 });
+      this.gLine(prof[prof.length - 1], back[back.length - 1], { alpha: alpha * 0.85, width: width * 0.85, wobble: 0.5, grain: 0.3 });
+      const bk = dir > 0 ? back[back.length - 1] : back[0];
+      if (h > this.H * 0.05) this.gLine(bk, [bk[0], bk[1] + h * this.r(0.18, 0.45)], { alpha: alpha * 0.5, width: width * 0.7, wobble: 0.6, grain: 0.3, over: 0.5 });
+    }
+    for (let i = 1; i < prof.length; i++) {
+      this.gLine(prof[i - 1], prof[i], { alpha: alpha * this.r(0.85, 1.1), width: width, wobble: 0.55, taper: 0.8, grain: 0.45, passes: d > 0.6 && this.R() < 0.5 ? 2 : 1 });
+    }
+    const lean = this.g() * h * 0.05;
+    this.gLine(prof[0], [x + lean, base], { alpha: alpha, width: width, wobble: 0.6, taper: 0.7, grain: 0.45, over: 0.6, passes: d > 0.65 ? 2 : 1 });
+    this.gLine(prof[prof.length - 1], [x + w + lean * this.r(0.3, 1.1), base], { alpha: alpha, width: width, wobble: 0.6, taper: 0.7, grain: 0.45, over: 0.6, passes: d > 0.65 ? 2 : 1 });
+    if (this.R() < 0.55) {
+      const bx0 = x + w * this.r(0, 0.3), bx1 = x + w * this.r(0.7, 1);
+      this.gLine([bx0, base + this.g() * this.H * 0.004], [bx1, base + this.g() * this.H * 0.004], { alpha: alpha * 0.45, width: width * 0.7, wobble: 0.7, taper: 1, grain: 0.35 });
+    }
+    this.R(); this.R();
+  }
+
+  terraces() {
+    const W = this.W, H = this.H;
+    const y0 = this.horizon, y1 = this.cliffY;
+    const n = 3 + Math.floor(this.R() * 2);
+    for (let k = 0; k < n; k++) {
+      const yy = y0 + ((y1 - y0) * (k + 0.35)) / n;
+      const pts = [];
+      const m = 6 + Math.floor(this.R() * 5);
+      const slope = this.g() * (y1 - y0) * 0.42;
+      for (let i = 0; i <= m; i++) {
+        pts.push([-0.05 * W + (1.1 * W * i) / m, yy + slope * (i / m - 0.5) + this.g() * (y1 - y0) * 0.11]);
+      }
+      const sp = this.spline(pts, 10);
+      const a = 0.3 + 0.28 * (k / n);
+      let tc = this.r(-0.06, 0.03);
+      while (tc < 1) {
+        const seg = Math.min(1, tc + this.r(0.08, 0.32));
+        const piece = sp.slice(Math.max(0, Math.floor(tc * sp.length)), Math.floor(seg * sp.length));
+        if (piece.length > 4) this.stroke(piece, { alpha: a * this.r(0.75, 1.15), width: (0.85 + 0.5 * (k / n)) * this.r(0.85, 1.25), wobble: 1.0, taper: 1, grain: 0.45, breakUp: 0.3 });
+        tc = seg + this.r(0.03, 0.17);
+      }
+      const notches = 2 + Math.floor(this.R() * 4);
+      for (let i = 0; i < notches; i++) {
+        const t = this.R();
+        const p = this.pt(sp, t);
+        const dy = (y1 - y0) * this.r(0.06, 0.2);
+        this.gLine([p.x, p.y], [p.x + this.g() * W * 0.012, p.y + dy], { alpha: a * 0.8, width: 0.8, wobble: 0.7, taper: 0.8, grain: 0.35 });
+        if (this.R() < 0.6) {
+          this.gLine([p.x, p.y + dy], [p.x + W * this.r(0.02, 0.09), p.y + dy + this.g() * dy * 0.2], { alpha: a * 0.7, width: 0.8, wobble: 0.7, taper: 0.9, grain: 0.35 });
+        }
+      }
+      if (this.R() < 0.55) {
+        this.hatchAlong(sp, { side: 1, band: (y1 - y0) * 0.16, count: Math.round(W / (14 * this.u)) , angle: -0.32, len: H * 0.022, alpha: 0.14, width: 0.7, fade: 0.8 });
+      }
+    }
+  }
+
+  foreground() {
+    const W = this.W, H = this.H, cy = this.cliffY;
+    /* back ridge in the top-left of the foreground band */
+    const rb = this.spline([[-0.04 * W, cy - H * 0.075], [W * 0.12, cy - H * 0.09], [W * 0.26, cy - H * 0.062], [W * 0.4, cy - H * 0.075]], 12);
+    if (!this.night) this.stroke(rb, { alpha: 0.5, width: 1.05, wobble: 0.9, taper: 1, grain: 0.45, passes: 2 });
+    if (!this.night) this.hatchAlong(rb, { side: 1, band: H * 0.05, count: Math.round(70 * (W / 480)), angle: -0.3, len: H * 0.032, alpha: 0.42, width: 1.0, fade: 0.85, bias: 1.4 });
+
+    /* near plateau: far edge + crack */
+    const crackX = W * this.r(0.3, 0.4);
+    this.crackX = crackX;
+    const edge = this.spline([[-0.04 * W, cy - H * 0.03], [W * 0.1, cy - H * 0.016], [W * 0.2, cy - H * 0.006], [crackX * 0.9, cy - H * 0.004], [crackX, cy]], 12);
+    this.stroke(edge, { alpha: this.night ? 0.95 : 0.66, width: this.night ? 1.9 : 1.15, wobble: 0.8, taper: 1, grain: 0.5, passes: 2, breakUp: 0.22 });
+    const ne2 = 2 + Math.floor(this.R() * 3);
+    for (let i = 0; i < ne2; i++) {
+      const p = this.pt(edge, this.r(0.1, 0.9));
+      const dy = H * this.r(0.012, 0.03);
+      this.gLine([p.x, p.y], [p.x + this.g() * W * 0.01, p.y + dy], { alpha: 0.5, width: 1.0, wobble: 0.6, taper: 0.85, grain: 0.4 });
+      this.gLine([p.x, p.y + dy], [p.x - W * this.r(0.02, 0.08), p.y + dy + this.g() * dy * 0.3], { alpha: 0.46, width: 0.95, wobble: 0.7, taper: 0.9, grain: 0.4 });
+    }
+
+    const crack = this.spline([
+      [crackX, cy],
+      [crackX + W * this.r(-0.01, 0.03), cy + (H - cy) * 0.22],
+      [crackX - W * this.r(0.0, 0.04), cy + (H - cy) * 0.55],
+      [crackX - W * this.r(0.02, 0.09), H * 1.04]
+    ], 14);
+    this.stroke(crack, { alpha: this.night ? 1 : 0.9, width: this.night ? 2.4 : 1.6, wobble: 0.7, taper: 0.55, grain: 0.6, passes: 2, breakUp: 0.14 });
+
+    /* plateau surface: sparse angular facets */
+    const nf = 6 + Math.floor(this.R() * 5);
+    for (let i = 0; i < nf; i++) {
+      const sx = this.r(-0.02, 0.55) * crackX * 1.6;
+      const sy = this.r(cy + H * 0.01, H * 0.995);
+      let px = sx, py = sy;
+      const segs = 1 + Math.floor(this.R() * 3);
+      for (let s = 0; s < segs; s++) {
+        const ang = this.r(-0.5, 0.5) + (this.R() < 0.5 ? 0 : 2.6);
+        const L = Math.min(W, H) * this.r(0.05, 0.19);
+        const nxp = px + Math.cos(ang) * L, nyp = py + Math.sin(ang) * L * 0.7;
+        if (!this.night && nxp < crackX - W * 0.02) {
+          this.gLine([px, py], [nxp, nyp], { alpha: this.r(0.24, 0.45), width: this.r(0.7, 1.05), wobble: 0.7, taper: 0.9, grain: 0.4 });
+        }
+        px = nxp; py = nyp;
+      }
+    }
+    /* thin shading on the plateau lip, left of the crack */
+    this.hatchAlong(crack, { side: 1, band: W * 0.035, count: Math.round(120 * (W / 480)), angle: -0.62, len: Math.min(W, H) * 0.045, alpha: this.night ? 1.6 : 0.3, width: 0.9, fade: 0.9, bias: 2.1 });
+
+    /* --- the abyss --- */
+    const rings = [];
+    const minD = Math.min(W, H);
+    const rr0 = Math.min(W * 0.05, (H - cy) * 0.3);
+    const ax = W * (0.615 + this.g() * 0.015);
+    const ay = cy + (H - cy) * (0.22 + this.g() * 0.04);
+    for (let i = 0; i < 2; i++) {
+      const rr = rr0;
+      const cx = ax + i * W * 0.135;
+      const ccy = Math.min(ay, H - rr * 1.2);
+      rings.push({ x: cx, y: ccy, r: rr });
+      this.eyeSpots.push({ x: cx, y: ccy, r: rr });
+      this.clear.push({ x: cx, y: ccy, r: rr * 1.78 });
+    }
+
+    /* wall of the near side, right of the crack */
+    const wallAng = (x, y) => -1.18 + this.g() * 0.09;
+    this.hatchAlong(crack, { side: -1, band: W * 0.022, count: Math.round(120 * (W / 480)), bias: 1.2, t0: 0, t1: 0.5, angle: wallAng, len: minD * 0.04, alpha: 0.46, width: 1.6, fade: 0.3, spray: 0.1 });
+    this.hatchAlong(crack, { side: -1, band: W * 0.042, count: Math.round(180 * (W / 480)), bias: 1.2, t0: 0.32, t1: 0.85, angle: wallAng, len: minD * 0.055, alpha: 0.5, width: 1.7, fade: 0.28, spray: 0.1 });
+    this.hatchAlong(crack, { side: -1, band: W * 0.075, count: Math.round(200 * (W / 480)), bias: 1.15, t0: 0.65, t1: 1, angle: wallAng, len: minD * 0.07, alpha: 0.52, width: 1.8, fade: 0.26, spray: 0.12 });
+
+    /* undulating hatched bands receding into the depth */
+    this.hatchBox(crackX + W * 0.015, cy + (H - cy) * 0.04, W * 1.02, H * 1.0, {
+      angle: -0.34, count: Math.round(320 * (W / 480)), len: minD * 0.075, alpha: 0.12, width: 1.1
+    });
+    this.stroke(crack, { alpha: this.night ? 0.95 : 0.86, width: this.night ? 2.1 : 1.5, wobble: 0.5, taper: 0.5, grain: 0.4, breakUp: 0.12 });
+    if (this.night) this.stroke(crack, { alpha: 0.5, width: 0.9, wobble: 0.3, taper: 0.5, grain: 0.2, breakUp: 0.1 });
+    const nb = 5 + Math.floor(this.R() * 3);
+    const gap = (H - cy) / (nb - 0.4);
+    for (let k = 0; k < nb; k++) {
+      const y = cy + gap * (k * this.r(0.85, 1.15) + 0.2);
+      const startX = crackX + W * this.r(0.0, 0.09) - (k % 2) * W * 0.02;
+      const pts = [];
+      const m = 4 + Math.floor(this.R() * 4);
+      const amp = gap * this.r(0.5, 1.2);
+      for (let i = 0; i <= m; i++) {
+        const t = i / m;
+        pts.push([startX + (W * 1.06 - startX) * t, y + Math.sin(t * this.r(2.2, 5.4) + k) * amp + this.g() * amp * 0.4]);
+      }
+      const sp = this.spline(pts, 12);
+      this.stroke(sp, { alpha: this.r(0.4, 0.72) * this.deepInk, width: this.r(0.9, 1.5), wobble: 0.85, taper: 1, grain: 0.5, breakUp: 0.28, passes: this.R() < 0.4 ? 2 : 1 });
+      const dens = Math.round((this.pathLen(sp) / (2.4 * this.u)) * this.r(0.8, 1.2));
+      const steep = 0.55 + 0.25 * this.R();
+      this.hatchAlong(sp, {
+        side: 1, band: gap * this.r(0.8, 1.5), count: dens, bias: 1.5,
+        angle: (x) => -0.3 - steep * Math.max(0, (x - W * 0.66) / (W * 0.34)),
+        len: minD * this.r(0.055, 0.12), alpha: this.r(0.4, 0.6), width: 1.8, fade: 0.62, spray: 0.13
+      });
+      /* a darker clump somewhere along the band */
+      if (this.R() < 0.8) {
+        const t0 = this.r(0, 0.7);
+        this.hatchAlong(sp, {
+          side: 1, band: gap * this.r(0.4, 0.8), count: Math.round(dens * 0.75), bias: 1.2,
+          t0: t0, t1: Math.min(1, t0 + this.r(0.15, 0.4)),
+          angle: (x) => -0.3 - steep * Math.max(0, (x - W * 0.66) / (W * 0.34)),
+          len: minD * this.r(0.05, 0.1), alpha: 0.54, width: 1.95, fade: 0.35, spray: 0.11
+        });
+      }
+    }
+    this.hatchBox(W * this.r(0.42, 0.58), cy + (H - cy) * this.r(0.3, 0.48), W * 1.02, H, {
+      angle: -0.42, count: Math.round(300 * (W / 480)), len: minD * 0.075, alpha: 0.26, width: 1.8
+    });
+    this.hatchBox(W * 0.76, cy + (H - cy) * 0.2, W * 1.03, H, {
+      angle: -0.95, count: Math.round(170 * (W / 480)), len: minD * 0.06, alpha: 0.24, width: 1.7
+    });
+    this.hatchAlong(crack, { side: -1, band: W * 0.13, count: Math.round(150 * (W / 480)), bias: 1.6, t0: 0.72, t1: 1, angle: (x, y) => -0.5 + this.g() * 0.12, len: minD * 0.06, alpha: 0.3, width: 1.8, fade: 0.5, spray: 0.12 });
+    if (!this.night) for (const r of rings) this.ring(r.x, r.y, r.r);
+  }
+
+  ring(cx, cy, rad) {
+    const radii = [rad, rad * this.r(0.66, 0.76), rad * this.r(0.22, 0.3)];
+    for (let k = 0; k < radii.length; k++) {
+      const rr = radii[k], start = this.R() * 6.283, turns = this.r(0.98, 1.06), steps = 52;
+      const pts = [];
+      for (let i = 0; i <= steps; i++) {
+        const a = start + turns * 6.283 * (i / steps);
+        const r2 = rr * (1 + 0.035 * (this.n1(i * 0.3 + k * 17, 9) - 0.5));
+        pts.push([cx + Math.cos(a) * r2, cy + Math.sin(a) * r2]);
+      }
+      this.stroke(pts, { alpha: this.night ? 0.34 : 0.72, width: k === 2 ? 1.0 : 1.25, wobble: 0.28, taper: 0.35, grain: 0.5, breakUp: 0.2 });
+    }
+    const dr = rad * this.r(1.5, 1.7), nd = 22 + Math.floor(this.R() * 10);
+    let a = this.R() * 6.283;
+    for (let i = 0; i < nd; i++) {
+      const sweep = (6.283 / nd) * this.r(0.35, 0.7);
+      const pts = [];
+      for (let j = 0; j <= 5; j++) {
+        const aa = a + sweep * (j / 5);
+        const r2 = dr * (1 + 0.03 * (this.n1(i * 3 + j * 0.4, 11) - 0.5));
+        pts.push([cx + Math.cos(aa) * r2, cy + Math.sin(aa) * r2]);
+      }
+      this.stroke(pts, { alpha: this.r(0.35, 0.62) * (this.night ? 0.55 : 1), width: 0.9, wobble: 0.3, taper: 0.5, grain: 0.4 });
+      a += 6.283 / nd;
+    }
+  }
+
+  ellipseRing(c, along, across, rot, o) {
+    const pts = [], st = this.R() * 6.283, turns = this.r(0.97, 1.05);
+    for (let i = 0; i <= 40; i++) {
+      const a = st + 6.283 * turns * (i / 40);
+      const ex = Math.cos(a) * along, ey = Math.sin(a) * across;
+      pts.push([c[0] + ex * Math.cos(rot) - ey * Math.sin(rot), c[1] + ex * Math.sin(rot) + ey * Math.cos(rot)]);
+    }
+    this.stroke(pts, o);
+    return pts;
+  }
+
+  limb(a, b, r0, r1, rings, o) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    const at = (t, r, sgn) => [a[0] + dx * t + nx * r * sgn, a[1] + dy * t + ny * r * sgn];
+    const ang = Math.atan2(dy, dx);
+    this.fillPoly([at(-0.04, r0, 1), at(1.04, r1, 1), at(1.04, r1, -1), at(-0.04, r0, -1)], 1);
+    this.gLine(at(0, r0, 1), at(1, r1, 1), o);
+    this.gLine(at(0, r0, -1), at(1, r1, -1), o);
+    /* silhouette only: cap the ends so the limb reads as one closed shape */
+    if (o.cap !== false) {
+      this.ellipseRing(b, r1 * this.r(0.85, 1.0), r1 * 0.95, ang, { alpha: o.alpha * 0.5, width: o.width * 0.85, wobble: 0.3, taper: 0.6, grain: 0.35, breakUp: 0.3 });
+    }
+  }
+
+  joint(c, r, o) {
+    /* the body reads as one outline — joints only clear what is behind them */
+    this.fillPoly([[c[0] - r, c[1] - r], [c[0] + r, c[1] - r], [c[0] + r, c[1] + r], [c[0] - r, c[1] + r]], 1);
+    this.R();
+  }
+
+  /* the humanoid: a jointed mannequin at the rim, head bowed toward the eyes */
+  figure() {
+    const W = this.W, H = this.H;
+    const m = this.figMark || this.figSpot();
+    const hf = m.hf, fx = m.fx, fy = m.fy;
+    const ink = { alpha: this.night ? 1 : 0.85, width: this.night ? 2.3 : 1.3, wobble: 0.4, taper: 0.5, grain: 0.55, breakUp: 0.1, passes: this.night ? 2 : 1 };
+    const P = (dx, dy) => [fx + hf * dx, fy + hf * dy];
+
+    const hip = P(0.035, -0.47), chest = P(0.1, -0.76), neck = P(0.14, -0.83);
+    const headC = P(0.2, -0.885);
+    const kneeF = P(0.075, -0.235), ankleF = P(0.01, -0.03);
+    const kneeB = P(-0.075, -0.25), ankleB = P(-0.155, -0.025);
+    const shoulder = P(0.115, -0.775);
+    const elbowF = P(0.185, -0.62), handF = P(0.155, -0.47);
+    const elbowB = P(0.045, -0.63), handB = P(0.075, -0.48);
+
+    /* back limbs first so the near side overlaps them */
+    this.limb(hip, kneeB, hf * 0.064, hf * 0.052, 0, { ...ink, alpha: ink.alpha * 0.7, cap: false });
+    this.limb(kneeB, ankleB, hf * 0.052, hf * 0.036, 0, { ...ink, alpha: ink.alpha * 0.7, cap: false });
+    this.joint(kneeB, hf * 0.045, { ...ink, alpha: ink.alpha * 0.7 });
+    this.limb(shoulder, elbowB, hf * 0.047, hf * 0.037, 0, { ...ink, alpha: ink.alpha * 0.7, cap: false });
+    this.limb(elbowB, handB, hf * 0.037, hf * 0.028, 0, { ...ink, alpha: ink.alpha * 0.7 });
+
+    /* torso */
+    this.limb(hip, chest, hf * 0.105, hf * 0.092, 0, { ...ink, cap: false });
+    this.limb(neck, chest, hf * 0.045, hf * 0.06, 0, ink);
+    this.joint(hip, hf * 0.075, ink);
+
+    /* near leg + arm */
+    this.limb(hip, kneeF, hf * 0.068, hf * 0.055, 0, { ...ink, cap: false });
+    this.limb(kneeF, ankleF, hf * 0.055, hf * 0.038, 0, { ...ink, cap: false });
+    this.joint(kneeF, hf * 0.05, ink);
+    this.limb(shoulder, elbowF, hf * 0.05, hf * 0.04, 0, { ...ink, cap: false });
+    this.limb(elbowF, handF, hf * 0.04, hf * 0.03, 0, ink);
+    this.joint(elbowF, hf * 0.038, { ...ink, alpha: ink.alpha * 0.85 });
+
+    /* feet */
+    this.gLine(ankleF, [ankleF[0] + hf * 0.075, ankleF[1] + hf * 0.012], ink);
+    this.gLine([ankleF[0] + hf * 0.075, ankleF[1] + hf * 0.012], [ankleF[0] + hf * 0.01, ankleF[1] + hf * 0.028], { ...ink, alpha: ink.alpha * 0.8 });
+    this.gLine(ankleB, [ankleB[0] + hf * 0.062, ankleB[1] + hf * 0.014], { ...ink, alpha: ink.alpha * 0.7 });
+
+    /* head: bowed oval with meridian + equator contours */
+    const tilt = this.r(0.5, 0.72);
+    const rx = hf * 0.095, ry = hf * 0.12;
+    this.fillPoly([[headC[0] - rx * 1.35, headC[1] - ry * 1.35], [headC[0] + rx * 1.35, headC[1] - ry * 1.35], [headC[0] + rx * 1.35, headC[1] + ry * 1.35], [headC[0] - rx * 1.35, headC[1] + ry * 1.35]], 1);
+    this.ellipseRing(headC, rx, ry, tilt, { ...ink, alpha: ink.alpha, taper: 0.35, breakUp: 0.16 });
+    this.R(); this.R();
+    this.limb(neck, [headC[0] - Math.sin(tilt) * ry * 0.7, headC[1] + Math.cos(tilt) * ry * 0.7], hf * 0.04, hf * 0.036, 0, { ...ink, alpha: ink.alpha * 0.8, cap: false });
+  }
+
+  figSpot() {
+    const W = this.W, H = this.H, minD = Math.min(W, H);
+    return {
+      hf: Math.min(H * 0.3, Math.max(H * 0.21, minD * 0.28)),
+      fx: (this.crackX || W * 0.35) - W * 0.035,
+      fy: this.cliffY + H * 0.014
+    };
+  }
+
+  fxCanvas() {
+    const c = this.cv();
+    return c && c.parentNode ? c.parentNode.querySelector('canvas[data-fx="1"]') : null;
+  }
+
+  fxSetup() {
+    const c = this.fxCanvas();
+    if (!c) return null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const o = { x: 0, y: 0, w: this.W, h: this.H };
+    this._fxOff = o;
+    const w = Math.round(o.w * dpr), h = Math.round(o.h * dpr);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const x = c.getContext("2d");
+    x.setTransform(dpr, 0, 0, dpr, Math.round(o.x * dpr), Math.round(o.y * dpr));
+    return x;
+  }
+
+  fxClear(fx) {
+    const o = this._fxOff;
+    fx.clearRect(-o.x - 2, -o.y - 2, o.w + 4, o.h + 4);
+  }
+
+  withCtx(ctx, seed, fn) {
+    const oc = this.ctx, oR = this.R;
+    this.ctx = ctx;
+    this.R = this.rngFrom(seed >>> 0);
+    try { fn(); } finally { this.ctx = oc; this.R = oR; }
+  }
+
+  /* a sketched grand piano; broken = lid torn off and body split */
+  piano(cx, cy, pw, rot, o, broken) {
+    const ph = pw * 0.5;
+    const T = (p) => {
+      const x = p[0] * pw, y = p[1] * ph;
+      return [cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)];
+    };
+    const poly = (arr, oo) => {
+      for (let i = 1; i < arr.length; i++) this.gLine(T(arr[i - 1]), T(arr[i]), oo || o);
+    };
+    poly([[-0.5, -0.16], [0.32, -0.16], [0.5, 0.0], [0.47, 0.2], [-0.5, 0.2], [-0.5, -0.16]]);
+    if (broken) {
+      poly([[-0.46, -0.2], [-0.05, -0.44], [0.16, -0.3]], { ...o, alpha: o.alpha * 0.85 });
+      poly([[0.2, -0.52], [0.62, -0.34], [0.5, -0.2]], { ...o, alpha: o.alpha * 0.7 });
+      poly([[-0.1, -0.16], [-0.02, 0.2]], { ...o, alpha: o.alpha * 0.6 });
+      poly([[0.14, -0.16], [0.24, 0.14]], { ...o, alpha: o.alpha * 0.5 });
+    } else {
+      poly([[-0.47, -0.18], [0.06, -0.6], [0.34, -0.47], [0.31, -0.17]]);
+    }
+    this.gLine(T([-0.5, 0.03]), T([-0.14, 0.03]), { ...o, alpha: o.alpha * 0.8 });
+    for (let i = 0; i < 7; i++) {
+      const t = -0.48 + i * 0.048;
+      this.gLine(T([t, 0.04]), T([t, 0.17]), { ...o, alpha: o.alpha * 0.4, width: o.width * 0.5 });
+    }
+    const legs = broken ? [[[-0.44, 0.2], [-0.62, 0.34]], [[0.3, 0.2], [0.36, 0.46]]] : [[[-0.44, 0.2], [-0.46, 0.46]], [[0.32, 0.2], [0.35, 0.47]], [[-0.04, 0.2], [-0.02, 0.42]]];
+    for (const l of legs) this.gLine(T(l[0]), T(l[1]), { ...o, alpha: o.alpha * 0.85 });
+  }
+
+  /* one-off sprite so the fall is a blit per frame, not a redraw */
+  bakePiano(pw) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = pw * 1.9, h = pw * 1.7;
+    const ink = document.createElement("canvas");
+    ink.width = Math.round(w * dpr); ink.height = Math.round(h * dpr);
+    const ix = ink.getContext("2d");
+    ix.setTransform(dpr, 0, 0, dpr, (w / 2) * dpr, (h / 2) * dpr);
+    this.withCtx(ix, 4242, () => {
+      this.piano(0, 0, pw, 0, { alpha: 1, width: 2.1, wobble: 0.5, taper: 0.5, grain: 0.5, breakUp: 0.14, passes: 2 }, false);
+    });
+    const out = document.createElement("canvas");
+    out.width = ink.width; out.height = ink.height;
+    const ox = out.getContext("2d");
+    ox.globalCompositeOperation = "lighter";
+    if (this.night) {
+      ox.filter = "blur(" + (5 * this.u * dpr).toFixed(1) + "px)";
+      ox.globalAlpha = 0.5;
+      ox.drawImage(ink, 0, 0);
+      ox.filter = "none";
+    }
+    ox.globalAlpha = 1;
+    ox.drawImage(ink, 0, 0);
+    return { c: out, w: w, h: h };
+  }
+
+  /* impact: bury the figure in dust and stamp the wreck straight onto the scene */
+  stampCrush() {
+    const m = this.figMark, lc = this.cv();
+    if (!m || !lc) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pw = Math.max(this.W * 0.15, m.hf * 1.3);
+    const lx = lc.getContext("2d");
+    lx.save();
+    lx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const R2 = this.rngFrom(5150);
+    for (let i = 0; i < 12; i++) {
+      const bxc = m.fx + (R2() - 0.5) * m.hf * 0.75;
+      const byc = m.fy - m.hf * (0.15 + R2() * 0.85);
+      const br = m.hf * (0.26 + R2() * 0.3);
+      const g = lx.createRadialGradient(bxc, byc, 0, bxc, byc, br);
+      g.addColorStop(0, this.paper);
+      g.addColorStop(0.6, this.night ? "rgba(11,12,14,0.92)" : "rgba(240,237,228,0.92)");
+      g.addColorStop(1, this.night ? "rgba(11,12,14,0)" : "rgba(240,237,228,0)");
+      lx.fillStyle = g;
+      lx.beginPath();
+      lx.arc(bxc, byc, br, 0, 6.2832);
+      lx.fill();
+    }
+    lx.restore();
+
+    const pad = m.hf * 0.5;
+    const bx = m.fx - pw, by = m.fy - m.hf * 1.15 - pad;
+    const bw = pw * 2, bh = m.hf * 1.3 + pad * 2;
+    const ink = document.createElement("canvas");
+    ink.width = Math.max(1, Math.round(bw * dpr));
+    ink.height = Math.max(1, Math.round(bh * dpr));
+    const ix = ink.getContext("2d");
+    ix.setTransform(dpr, 0, 0, dpr, -bx * dpr, -by * dpr);
+    this.withCtx(ix, 6060, () => {
+      this.wreck();
+      const ink2 = { alpha: 0.5, width: 1.2, wobble: 0.6, taper: 0.9, grain: 0.35 };
+      for (let i = 0; i < 16; i++) {
+        const a = this.r(-3.0, -0.2), Ls = pw * this.r(0.08, 0.34);
+        const sx = m.fx + this.g() * pw * 0.3, sy = m.fy + this.g() * pw * 0.04;
+        this.stroke([[sx, sy], [sx + Math.cos(a) * Ls, sy + Math.sin(a) * Ls]], ink2);
+      }
+    });
+    lx.save();
+    lx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lx.globalCompositeOperation = "lighter";
+    if (this.night) {
+      lx.filter = "blur(" + (5 * this.u).toFixed(1) + "px)";
+      lx.globalAlpha = 0.5;
+      lx.drawImage(ink, bx, by, bw, bh);
+      lx.filter = "none";
+    }
+    lx.globalAlpha = 1;
+    lx.drawImage(ink, bx, by, bw, bh);
+    lx.restore();
+  }
+
+  wreck() {
+    const m = this.figMark;
+    if (!m) return;
+    const pw = Math.max(this.W * 0.15, m.hf * 1.3);
+    const ink = { alpha: this.night ? 1 : 0.85, width: this.night ? 2.2 : 1.3, wobble: 0.65, taper: 0.55, grain: 0.55, breakUp: 0.16, passes: 2 };
+    this.piano(m.fx + m.hf * 0.12, m.fy - pw * 0.14, pw, 0.1, ink, true);
+    for (let i = 0; i < 14; i++) {
+      const a = this.r(-2.9, -0.3), L = pw * this.r(0.06, 0.3);
+      const sx = m.fx + this.g() * pw * 0.4, sy = m.fy + this.g() * pw * 0.05;
+      this.gLine([sx, sy], [sx + Math.cos(a) * L, sy + Math.sin(a) * L], { ...ink, alpha: 0.5 * this.r(0.5, 1), width: 1.2, passes: 1 });
+    }
+  }
+
+  debris(impact, pw, p) {
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const a = this.r(-3.0, -0.15), L = pw * this.r(0.15, 0.75) * (0.4 + p);
+      const x = impact.x + this.g() * pw * 0.2, y = impact.y + pw * 0.12;
+      this.stroke([[x, y], [x + Math.cos(a) * L, y + Math.sin(a) * L]], { alpha: (1 - p) * 0.9, width: this.r(1, 2.4), wobble: 0.5, taper: 0.9, grain: 0.3 });
+    }
+  }
+
+  /* the presence: an original face, anchored so the two glows are its eyes */
+  /* Position the reference art so its eyes land exactly on the two glows.
+     Both scene eyes share a Y (foreground() gives them the same ay), so a
+     scale + translate is enough - no rotation needed. */
+  buildFace() {
+    const M = this.faceMetrics();
+    const img = this._faceImg;
+    if (!M || !img || !img.complete || !img.naturalWidth) return null;
+    const E = FACE_EYES;
+    const dw = (M.Rr.x - M.L.x) / (E.rx - E.lx);
+    const dh = dw * (img.naturalHeight / img.naturalWidth);
+    this._faceBox = {
+      x: M.L.x - E.lx * dw,
+      y: M.my - ((E.ly + E.ry) / 2) * dh,
+      w: dw,
+      h: dh
+    };
+    return img;
+  }
+
+  faceMetrics() {
+    const e = this.eyeSpots;
+    if (!e || e.length < 2) return null;
+    const L = e[0].x <= e[1].x ? e[0] : e[1], Rr = e[0].x <= e[1].x ? e[1] : e[0];
+    const cx = (L.x + Rr.x) / 2, my = (L.y + Rr.y) / 2;
+    const span = Math.max(24, Rr.x - L.x);
+    const minD = Math.min(this.W, this.H);
+    const hw = Math.min(span * 1.32, this.W * 0.985 - cx, cx - this.W * 0.015, minD * 0.46);
+    const fh = hw * 2.05;
+    return { L: L, Rr: Rr, cx: cx, my: my, span: span, minD: minD, hw: hw, fh: fh, top: my - fh * 0.5 };
+  }
+
+  revealFace(fx, p) {
+    if (!fx) return;
+    if (this._face === undefined || this._face === null) this._face = this.buildFace();
+    const M = this.faceMetrics();
+    if (!M || !this._face) return;
+    const ease = 1 - Math.pow(1 - p, 3);
+    const R = Math.max(this.W, this.H) * 1.4 * ease;
+    const o = this._fxOff;
+    this.fxClear(fx);
+    fx.save();
+    fx.fillStyle = "rgba(6,8,12," + (0.5 * ease).toFixed(3) + ")";
+    fx.fillRect(-o.x, -o.y, o.w, o.h);
+    fx.restore();
+    fx.save();
+    fx.beginPath();
+    fx.arc(M.cx, M.my, R, 0, 6.2832);
+    fx.clip();
+    fx.globalAlpha = Math.min(1, p * 1.4);
+    const b = this._faceBox;
+    fx.drawImage(this._face, b.x, b.y, b.w, b.h);
+    fx.restore();
+    /* the glows are its eyes now - let ours fade out as it resolves */
+    this.fadeEyes(Math.max(0, 1 - Math.min(1, p * 1.7)));
+  }
+
+  startCalamity() {
+    if (this._raf || this.phase) return;
+    const m = this.figMark;
+    if (!m) return;
+    const root = this.cv().parentNode;
+    const impact = { x: m.fx + m.hf * 0.12, y: m.fy - m.hf * 0.92 };
+    const pw = Math.max(this.W * 0.15, m.hf * 1.3);
+    const D = { fall: 820, hit: 300, reveal: 1600 };
+    this._crushed = false;
+    this._face = null;
+    this.setPhase(1);
+    this._pianoSprite = this.bakePiano(pw);
+    this.bakeDebris(impact, pw);
+    const t0 = performance.now();
+    const step = () => {
+      const t = performance.now() - t0;
+      const fx = this.fxSetup();
+      if (!fx) { this._raf = 0; return; }
+      if (t < D.fall) {
+        const p = t / D.fall, e = p * p;
+        const y = -this.H * 0.3 + (impact.y + this.H * 0.3) * e;
+        this.fxClear(fx);
+        const sp = this._pianoSprite;
+        if (sp) {
+          fx.save();
+          fx.globalCompositeOperation = "lighter";
+          fx.strokeStyle = "rgba(" + this.inkRGB + ",0.24)";
+          fx.lineWidth = 1.1;
+          fx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const sx = impact.x + (i / 5 - 0.5) * pw * 0.9;
+            const len = pw * (0.35 + 0.5 * ((i * 37) % 7) / 7) * (0.3 + p);
+            fx.moveTo(sx, y - pw * 0.55 - len);
+            fx.lineTo(sx, y - pw * 0.5);
+          }
+          fx.stroke();
+          fx.translate(impact.x, y);
+          fx.rotate(-0.32 + 0.4 * e);
+          fx.drawImage(sp.c, -sp.w / 2, -sp.h / 2, sp.w, sp.h);
+          fx.restore();
+        }
+      } else if (t < D.fall + D.hit) {
+        const p = (t - D.fall) / D.hit;
+        if (!this._crushed) {
+          this._crushed = true;
+          this._phase = 1;
+          this.stampCrush();
+        }
+        this.fxClear(fx);
+        fx.save();
+        fx.globalCompositeOperation = "lighter";
+        fx.fillStyle = "rgba(200,224,255," + (0.55 * Math.pow(1 - p, 1.6)).toFixed(3) + ")";
+        fx.fillRect(0, 0, this.W, this.H);
+        fx.restore();
+        this.drawDebris(fx, impact, p);
+        if (root) {
+          const k = (1 - p) * 9;
+          root.style.transform = "translate(" + (Math.sin(p * 46) * k).toFixed(2) + "px," + (Math.cos(p * 37) * k * 0.7).toFixed(2) + "px) scale(" + (1 + 0.004 * k).toFixed(4) + ")";
+        }
+      } else {
+        if (root) root.style.transform = "none";
+        const p = Math.min(1, (t - D.fall - D.hit) / D.reveal);
+        this.revealFace(fx, p);
+      }
+      if (t < D.fall + D.hit + D.reveal) this._raf = requestAnimationFrame(step);
+      else { this._raf = 0; this.revealFace(this.fxSetup(), 1); }
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+
+  resetCalamity() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = 0;
+    this._crushed = false;
+    this._phase = 0;
+    this._face = null;
+    this._pianoSprite = null;
+    this._debris = null;
+    this.fadeEyes(1);
+    const fx = this.fxSetup();
+    if (fx) this.fxClear(fx);
+    const root = this.cv() && this.cv().parentNode;
+    if (root) {
+      root.style.transform = "none";
+      root.style.transformOrigin = "";
+      const fxc = this.fxCanvas();
+      if (fxc) { fxc.style.transform = "none"; fxc.style.transformOrigin = ""; }
+      const socks = root.querySelectorAll("[data-eye-socket]");
+      for (const sk of socks) { sk.style.transform = "none"; sk.style.transformOrigin = ""; }
+    }
+    this.setPhase(0);
+    this._painted = false;
+    this.paint();
+  }
+
+  /* ---------- paper tooth over everything ---------- */
+  grainPass(target) {
+    const G = this.props.grain == null ? 1 : this.props.grain;
+    if (G <= 0.001) return;
+    const c = target || this.cv(), ctx = this.vctx;
+    const cw = c.width, ch = c.height;
+    if (!cw || !ch) return;
+    if (!this._tile) {
+      let s = 1234567;
+      const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+      const T = new Float32Array(256 * 256);
+      for (let i = 0; i < T.length; i++) T[i] = rnd();
+      /* soften slightly so it reads as tooth, not TV static */
+      const S = new Float32Array(256 * 256);
+      for (let y = 0; y < 256; y++) {
+        for (let x = 0; x < 256; x++) {
+          const i = y * 256 + x;
+          S[i] = (T[i] * 2 + T[(y * 256) + ((x + 1) & 255)] + T[(((y + 1) & 255) * 256) + x]) / 4;
+        }
+      }
+      this._tile = S;
+    }
+    const T = this._tile;
+    const img = ctx.getImageData(0, 0, cw, ch);
+    const d = img.data;
+    const night = this.night;
+    const PR = night ? 11 : 240, PG = night ? 12 : 237, PB = night ? 14 : 228;
+    const vx = new Float32Array(cw);
+    for (let x = 0; x < cw; x++) { const t = x / cw - 0.5; vx[x] = t * t; }
+    for (let y = 0; y < ch; y++) {
+      const ty = y / ch - 0.5;
+      const vyv = ty * ty;
+      const row = (y & 255) << 8;
+      for (let x = 0; x < cw; x++) {
+        const i = (y * cw + x) << 2;
+        const n = T[row | (x & 255)];
+        const light = Math.max(0, n - 0.56) * 1.7 * G;
+        const dark = Math.max(0, 0.42 - n) * 0.2 * G;
+        let vig = 1 - (vx[x] + vyv) * (night ? 0.36 : 0.19);
+        if (night) vig *= 1 - Math.max(0, (y / ch - 0.74) / 0.26) * 0.3;
+        let r = d[i], g = d[i + 1], b = d[i + 2];
+        r += (PR - r) * light; g += (PG - g) * light; b += (PB - b) * light;
+        r = r * (1 - dark) * vig; g = g * (1 - dark) * vig; b = b * (1 - dark) * vig;
+        if (night) { const f = (n - 0.5) * 8 * G; r += f; g += f; b += f * 1.12; }
+        d[i] = r; d[i + 1] = g; d[i + 2] = b;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  /* ---------- main ---------- */
+  async paint(target) {
+    const live = this.cv();
+    if (!live) return;
+    const c = target || live;
+    const host = live.parentNode && live.parentNode.parentNode;
+    const rect = host ? { width: host.offsetWidth, height: host.offsetHeight } : live.getBoundingClientRect();
+    const W = Math.max(240, Math.round(rect.width));
+    const H = Math.max(240, Math.round(rect.height));
+    if (!target && this._lastW && Math.abs(W - this._lastW) < this._lastW * 0.02 && Math.abs(H - this._lastH) < this._lastH * 0.06 && this._painted) return;
+    if (!target) { this._lastW = W; this._lastH = H; this._painted = true; }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+    const ctx = c.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    /* background goes to its own layer, so the visible canvas is not touched
+       until the final composite and chunked painting never shows a half-scene */
+    const bg = this._bg || (this._bg = document.createElement("canvas"));
+    bg.width = c.width; bg.height = c.height;
+    const bgctx = bg.getContext("2d");
+    bgctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.vctx = bgctx;
+    const off = this._off || (this._off = document.createElement("canvas"));
+    off.width = c.width; off.height = c.height;
+    const octx = off.getContext("2d");
+    octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.ctx = octx;
+    this.W = W; this.H = H;
+    this.night = (this.props.mode || "night") !== "paper";
+    this.paper = this.night ? "#0b0c0e" : "#f0ede4";
+    this.inkRGB = this.night ? "226,235,244" : "41,38,34";
+    this.hatchInk = this.night ? 0.1 : 1;
+    this.deepInk = this.night ? 0.4 : 1;
+    if (c.parentNode && c.parentNode.style) c.parentNode.style.background = this.paper;
+    document.documentElement.style.background = this.paper;
+    document.body.style.background = this.paper;
+    this.u = Math.max(0.85, Math.min(W, H) / 560);
+    this.ink = this.props.inkStrength == null ? 1 : this.props.inkStrength;
+    this.R = this.rngFrom((this.props.seed == null ? 4211 : this.props.seed) | 0);
+    this.clear = [];
+    this.eyeSpots = [];
+
+    /* composition bands adapt from tall-portrait to wide-landscape */
+    const t = Math.max(0, Math.min(1, (W / H - 0.5) / 1.3));
+    const lerp = (a, b) => a + (b - a) * t;
+    this.mesaTop = H * lerp(0.43, 0.31);
+    this.horizon = H * lerp(0.655, 0.6);
+    this.cliffY = H * lerp(0.748, 0.7);
+    this.skyBottom = this.mesaTop * 0.8;
+
+    /* Same calls in the same order -> same RNG sequence -> same picture.
+       Yielding between phases only decides when they run, never what they draw. */
+    const tok = ++this._paintTok;
+    this._sliceT = performance.now();
+    const slice = async () => {
+      if (performance.now() - this._sliceT < 8) return true;
+      await new Promise((r) => requestAnimationFrame(r));
+      this._sliceT = performance.now();
+      return tok === this._paintTok;
+    };
+
+    this.background();
+    if (!(await slice())) return;
+    this.sky();
+    octx.save();
+    octx.globalCompositeOperation = "destination-out";
+    octx.fillStyle = "#000";
+    octx.fillRect(-2, this.skyBottom, W + 4, H - this.skyBottom + 4);
+    octx.restore();
+    if (!(await slice())) return;
+    this.distantRidge();
+    if (!(await slice())) return;
+    this.mesas();
+    if (!(await slice())) return;
+    this.terraces();
+    if (!(await slice())) return;
+    this.foreground();
+    if (!(await slice())) return;
+    this.figMark = this.figSpot();
+    if (!this._phase) this.figure(); else this.wreck();
+    if (!(await slice())) return;
+
+    this.vctx = ctx;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    ctx.drawImage(bg, 0, 0);
+    if (this.night) {
+      const glow = this.props.glow == null ? 1 : this.props.glow;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.filter = "blur(" + (8 * this.u * dpr).toFixed(1) + "px)";
+      ctx.globalAlpha = 0.34 * glow;
+      ctx.drawImage(off, 0, 0);
+      ctx.filter = "blur(" + (2.4 * this.u * dpr).toFixed(1) + "px)";
+      ctx.globalAlpha = 0.42 * glow;
+      ctx.drawImage(off, 0, 0);
+      ctx.filter = "none";
+      ctx.globalCompositeOperation = "source-over";
+    }
+    ctx.globalAlpha = 1;
+    ctx.drawImage(off, 0, 0);
+    ctx.restore();
+    await this.grainPassAsync(c);
+    if (target) return;
+    const spots = this.night ? this.eyeSpots : [];
+    const m = this.figMark;
+    this.syncEyes(
+      spots.map((e) => ({ x: e.x, y: e.y, r: e.r })),
+      m ? { x: m.fx - m.hf * 0.22, y: m.fy - m.hf * 1.04, w: m.hf * 0.52, h: m.hf * 1.1 } : null
+    );
+  }
+
+}
+
+new Scene().mount();
+</script>
+
+</body>
+</html>
