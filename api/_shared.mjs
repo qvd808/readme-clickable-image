@@ -163,7 +163,7 @@ export async function markPlaying(key) {
  */
 export async function isPlaying(key) {
   const local = Date.now() - (warm.get(key) || 0) < WINDOW_MS;
-  if (!KV) return local;
+  if (!KV || local) return local;
   try {
     const r = await fetch(`${KV}/get/${key}`,
       { headers: { Authorization: `Bearer ${TOKEN}` }, cache: "no-store" });

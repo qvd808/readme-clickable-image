@@ -82,17 +82,30 @@ Copy and paste this HTML snippet into your `README.md`:
 
 ## 🔁 Returning to the Right Page (`mode=auto`)
 
-A profile README is rendered in **two** places — `github.com/YOUR_USER` and the repo `github.com/YOUR_USER/YOUR_USER`. A fixed `back` URL sends everyone to the same one, so clicking from inside the repo kicks the visitor out to the profile page.
+For a normal project README there is only one place to go back to, so a plain `back` URL is correct and nothing here is needed.
 
-Add `mode=auto` to send them back to wherever they actually were:
+The exception is a **profile README**, which GitHub renders in **two** places from one file:
+
+* `github.com/YOUR_USER` — your profile page
+* `github.com/YOUR_USER/YOUR_USER` — the repo that holds it
+
+A fixed `back` sends everyone to the same one, so clicking from inside the repo kicks the visitor out to your profile. Add `mode=auto`:
 
 ```html
 <a href="https://readme-clickable-image.vercel.app/play?mode=auto&back=https://github.com/YOUR_USER&still=...&play=...">
 ```
 
-**How it works:** GitHub serves repo pages with `Referrer-Policy: no-referrer-when-downgrade`, so the full URL reaches `/play` in the `Referer` header and the visitor is returned to that exact page. Profile pages use `strict-origin-when-cross-origin`, which strips the path to a bare `https://github.com/` — that's the signal to use `back` (your profile) instead.
+**`Referer` carries a path** → redirect straight there. GitHub serves repo pages with `Referrer-Policy: no-referrer-when-downgrade`, so a hard-loaded repo page (refresh, address bar, new tab, external link, search result) hands over its full URL and the visitor returns to that exact page.
 
-The redirect target is always validated against the same `github.com` allowlist as `back`, so a missing, foreign, or downgraded `Referer` falls back rather than redirecting off-site. Links without `mode=auto` behave exactly as before.
+**`Referer` is stripped to a bare `https://github.com/`** → redirect to `back`.
+
+Every destination is validated against the same `github.com` allowlist as `back`, so a missing, foreign, or downgraded `Referer` falls back instead of redirecting off-site. Links without `mode=auto` behave exactly as before.
+
+### Why the fallback is sometimes taken
+
+GitHub is a Turbo app. Referrer-Policy is applied to a **document** when it is hard-loaded; a Turbo navigation swaps the page body without re-applying HTTP headers. So a visitor who is on your profile (`strict-origin-when-cross-origin`) and clicks through to your repo keeps the profile's stricter policy, and the click reports only `https://github.com/` even though the address bar shows the repo.
+
+Returning to the exact page in that case is possible with `history.back()`, which referrer policy cannot restrict — but a history navigation reuses the cached page and its subresources, so the image is never re-requested and the animation does not replay. Measured in Chrome: a 302 refetches the image, `history.back()` refetches nothing, even with `no-store`. Since the animation is the point of this project, `mode=auto` always redirects and never steps back through history.
 
 ---
 
