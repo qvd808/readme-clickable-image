@@ -9,14 +9,16 @@
 // guarantees the click and the reload land on the same one. For a personal
 // profile - low traffic, one warm instance, two requests a second apart - that
 // is almost always true. Attach Redis (see DEPLOY.md) and it becomes always.
-import { BLACK_CANVAS, config, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
+export const config = { runtime: "edge" };
+
+import { BLACK_CANVAS, config as getConfig, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
 export default async function handler(req, res) {
   const url = new URL(req.url || "/", "http://localhost");
 
   let cfg;
   try {
-    cfg = config(url);
+    cfg = await getConfig(url);
   } catch (err) {
     // a misconfigured template should fail loudly at setup, not quietly forever
     res.writeHead(400, { "Content-Type": "text/plain", "Cache-Control": "no-store" });

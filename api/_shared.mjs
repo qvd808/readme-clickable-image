@@ -15,20 +15,14 @@
 // proxy honours that on a redirect or adopts the headers of whatever it lands on
 // (raw.githubusercontent sends max-age=300). If it adopts them, the README gets
 // stuck on a spent animation for five minutes. Nothing local can answer that.
-import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import path from "node:path";
 
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
-// Where a click sends the visitor, and where the two images live. Query
-// parameters beat the environment, which is what makes this a template.
 const DEFAULT_BACK = process.env.PROFILE_URL || "https://github.com/qvd808";
 const DEFAULT_STILL = process.env.STILL_URL || "";
 const DEFAULT_PLAY = process.env.PLAY_URL || "";
 
-// Without these the service is an open redirect and an open image proxy: anyone
-// could hand out a link that looks like yours and lands wherever they like.
 const ASSET_HOSTS = new Set([
   "raw.githubusercontent.com", "objects.githubusercontent.com",
   "gist.githubusercontent.com", "user-images.githubusercontent.com",
@@ -70,13 +64,13 @@ export async function fetchRemoteAsset(urlStr) {
 
   let contentType = res.headers.get("content-type") || "";
   if (!contentType || contentType.includes("text/plain") || contentType.includes("octet-stream")) {
-    const ext = path.extname(new URL(urlStr).pathname).toLowerCase();
-    if (ext === ".svg") contentType = "image/svg+xml";
-    else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
-    else if (ext === ".png") contentType = "image/png";
-    else if (ext === ".gif") contentType = "image/gif";
-    else if (ext === ".webp") contentType = "image/webp";
-    else if (ext === ".avif") contentType = "image/avif";
+    const uPath = new URL(urlStr).pathname.toLowerCase();
+    if (uPath.endsWith(".svg")) contentType = "image/svg+xml";
+    else if (uPath.endsWith(".jpg") || uPath.endsWith(".jpeg")) contentType = "image/jpeg";
+    else if (uPath.endsWith(".png")) contentType = "image/png";
+    else if (uPath.endsWith(".gif")) contentType = "image/gif";
+    else if (uPath.endsWith(".webp")) contentType = "image/webp";
+    else if (uPath.endsWith(".avif")) contentType = "image/avif";
     else contentType = "image/jpeg";
   }
 
@@ -87,17 +81,21 @@ export async function fetchRemoteAsset(urlStr) {
   return asset;
 }
 
-export function config(url) {
+export async function config(url) {
   const q = url.searchParams;
   const back = checked(q.get("back") || DEFAULT_BACK, BACK_HOSTS, "back");
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
-  // One flag per pair of images, so one person's click cannot fire another's.
-  // Deliberately NOT keyed on `back`: /scene has no reason to carry it, and if
-  // it contributed to the key then /play and /scene would disagree and no click
-  // would ever register.
-  const key = "eyes:" + createHash("sha1")
-    .update(`${still}|${play}`).digest("hex").slice(0, 12);
+
+  let hex = "";
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const data = new TextEncoder().encode(`${still}|${play}`);
+    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+    hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  } else {
+    hex = createHash("sha1").update(`${still}|${play}`).digest("hex");
+  }
+  const key = "eyes:" + hex.slice(0, 12);
   return { back, still, play, key, redirecting: Boolean(still && play) };
 }
 
@@ -105,9 +103,6 @@ export const BLACK_CANVAS = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520"><rect width="100%" height="100%" fill="#000000"/></svg>'
 );
 
-// ---- the flag ---------------------------------------------------------------
-// Redis when configured. Otherwise memory, which works only because both routes
-// live in one function and therefore one module scope - see DEPLOY.md.
 const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const warm = new Map();
@@ -135,10 +130,18 @@ export async function isPlaying(key) {
   }
 }
 
-export function uncached(res, extra = {}) {
-  // the entire mechanism: the proxy only returns if told not to keep this
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  for (const [k, v] of Object.entries(extra)) res.setHeader(k, v);
+export function uncached(resOrHeaders, extra = {}) {
+  const headersObj = {
+    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    ...extra
+  };
+
+  if (resOrHeaders && typeof resOrHeaders.setHeader === "function") {
+    for (const [k, v] of Object.entries(headersObj)) resOrHeaders.setHeader(k, v);
+  } else if (resOrHeaders && typeof resOrHeaders.set === "function") {
+    for (const [k, v] of Object.entries(headersObj)) resOrHeaders.set(k, v);
+  }
 }
+
