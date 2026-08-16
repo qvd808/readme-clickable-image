@@ -13,25 +13,27 @@ export const config = { runtime: "edge" };
 
 import { BLACK_CANVAS, config as getConfig, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
-export default async function handler(req, res) {
-  const url = new URL(req.url || "/", "http://localhost");
+export default async function handler(req) {
+  const rawUrl = req.url || "/";
+  const url = new URL(rawUrl, "http://localhost");
 
   let cfg;
   try {
     cfg = await getConfig(url);
   } catch (err) {
-    // a misconfigured template should fail loudly at setup, not quietly forever
-    res.writeHead(400, { "Content-Type": "text/plain", "Cache-Control": "no-store" });
-    return res.end(err.message + "\n");
+    const headers = new Headers();
+    uncached(headers, { "Content-Type": "text/plain" });
+    return new Response(err.message + "\n", { status: 400, headers });
   }
 
   if (url.pathname.endsWith("/play") || url.searchParams.get("do") === "play") {
     if (cfg.play) {
       await markPlaying(cfg.key);
     }
-    uncached(res);
-    res.writeHead(302, { Location: cfg.back });
-    return res.end();
+    const headers = new Headers();
+    uncached(headers);
+    headers.set("Location", cfg.back);
+    return new Response(null, { status: 302, headers });
   }
 
   // Only play if 'play' URL is present and active
@@ -41,15 +43,18 @@ export default async function handler(req, res) {
   if (targetUrl) {
     try {
       const { data, contentType } = await fetchRemoteAsset(targetUrl);
-      uncached(res, { "Content-Type": contentType });
-      return res.end(req.method === "HEAD" ? undefined : data);
+      const headers = new Headers();
+      uncached(headers, { "Content-Type": contentType });
+      return new Response(req.method === "HEAD" ? null : data, { status: 200, headers });
     } catch (err) {
-      res.writeHead(502, { "Content-Type": "text/plain", "Cache-Control": "no-store" });
-      return res.end(`Failed to fetch remote asset: ${err.message}\n`);
+      const headers = new Headers();
+      uncached(headers, { "Content-Type": "text/plain" });
+      return new Response(`Failed to fetch remote asset: ${err.message}\n`, { status: 502, headers });
     }
   }
 
   // Fallback: missing static image -> serve black canvas
-  uncached(res, { "Content-Type": "image/svg+xml" });
-  res.end(req.method === "HEAD" ? undefined : BLACK_CANVAS);
+  const headers = new Headers();
+  uncached(headers, { "Content-Type": "image/svg+xml" });
+  return new Response(req.method === "HEAD" ? null : BLACK_CANVAS, { status: 200, headers });
 }
