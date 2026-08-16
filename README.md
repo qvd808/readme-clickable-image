@@ -26,7 +26,7 @@ It uses a stateful Edge Proxy that intercepts link clicks (`/play`), updates a t
               ├──> 1. Hits /play (Sets Redis state flag = true & pre-warms SVG into Edge RAM)
               │
               └──> 2. Redirects back to GitHub -> Camo requests /scene
-                   └── /scene streams SVG animation from Edge RAM (< 2ms)!
+                   └── /scene streams SVG animation from Edge RAM (no origin round-trip)
 ```
 
 ---
@@ -133,8 +133,13 @@ Those visitors land on your `back` URL and **the animation still plays** — onl
 ## ⚡ Performance & Architecture
 
 * **Vercel Edge Runtime:** Executes in V8 isolates at 300+ Edge locations globally (sub-30ms TTFB).
-* **Asynchronous Asset Pre-Warming:** During the 302 redirect phase, `/play` pre-fetches the animation asset into Edge memory asynchronously, allowing `/scene` to stream from RAM in **< 2ms**.
-* **Upstash Redis State Sync:** Distributed state tracking ensures 100% reliable click registration across multi-region edge instances with zero database growth (O(1) memory with 12s automatic TTL expiration).
+* **Asynchronous Asset Pre-Warming:** During the 302 redirect phase, `/play` pre-fetches the animation asset into Edge memory asynchronously, so `/scene` serves it from RAM instead of re-fetching from `raw.githubusercontent.com`. That removes the origin round-trip; end-to-end `/scene` latency measured from a home connection is **~130–400 ms**, dominated by network, not by the handler.
+* **Upstash Redis State Sync:** Distributed state tracking registers a click on one edge isolate and reads it from another, with zero database growth (bounded key space, 12s automatic TTL expiration).
+* **Camo passes `no-store` through:** measured against the live deployment, GitHub's image proxy returns `age=0` and `x-cache: MISS` on every request and re-fetches `/scene` each time. No cache-busting query parameter is needed, and the click→animation→reset cycle measured 6/6 through the real Camo URL. (Camo *does* cache when allowed — a `shields.io` badge on the same page returns `x-cache: HIT` on the second request — it simply honours `no-store`.)
+
+> **Do not add a cache TTL to `/scene`.** The `no-store` headers are load-bearing. Measured in Chrome: with `max-age=5` or `max-age=30`, the click's 302 reload serves the image from browser cache and the animation never plays; only `no-store` refetches. A TTL also cannot *trigger* a refresh — a browser never re-requests an already-painted `<img>` when its TTL expires (verified: 2s TTL, page open 9s, still one request). Without JavaScript, a navigation is the only thing that can change the image, which is exactly why `/play` redirects.
+
+> **Shared state, by design:** the Redis key is derived from the `still|play` pair only, so a click activates the animation for *everyone* viewing that image during the 12-second window. Per-visitor state is not possible here: `/scene` is requested by GitHub's Camo servers, not by the visitor's browser, so the visitor is never visible to this server — and the `<img src>` in an already-rendered README cannot be given a per-click token.
 
 ---
 

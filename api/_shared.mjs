@@ -165,7 +165,7 @@ export async function isPlaying(key) {
   const local = Date.now() - (warm.get(key) || 0) < WINDOW_MS;
   if (!KV || local) return local;
   try {
-    const r = await fetch(`${KV}/get/${key}`,
+    const r = await fetch(`${KV}/getdel/${key}`,
       { headers: { Authorization: `Bearer ${TOKEN}` }, cache: "no-store" });
     return (await r.json()).result === "1";
   } catch {
