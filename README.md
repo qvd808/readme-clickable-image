@@ -101,11 +101,23 @@ A fixed `back` sends everyone to the same one, so clicking from inside the repo 
 
 Every destination is validated against the same `github.com` allowlist as `back`, so a missing, foreign, or downgraded `Referer` falls back instead of redirecting off-site. Links without `mode=auto` behave exactly as before.
 
-### Why the fallback is sometimes taken
+### Browser support
 
-GitHub is a Turbo app. Referrer-Policy is applied to a **document** when it is hard-loaded; a Turbo navigation swaps the page body without re-applying HTTP headers. So a visitor who is on your profile (`strict-origin-when-cross-origin`) and clicks through to your repo keeps the profile's stricter policy, and the click reports only `https://github.com/` even though the address bar shows the repo.
+`mode=auto` depends on the browser passing the `Referer` along. Measured by clicking the real link on a real GitHub repo page:
 
-Returning to the exact page in that case is possible with `history.back()`, which referrer policy cannot restrict — but a history navigation reuses the cached page and its subresources, so the image is never re-requested and the animation does not replay. Measured in Chrome: a 302 refetches the image, `history.back()` refetches nothing, even with `no-store`. Since the animation is the point of this project, `mode=auto` always redirects and never steps back through history.
+| Browser | `Referer` received | Result |
+| --- | --- | --- |
+| Chrome / Edge | `https://github.com/USER/REPO` | returns to the repo |
+| Firefox | `https://github.com/USER/REPO` | returns to the repo |
+| Brave | `https://github.com/` (origin only) | falls back to `back` |
+
+Brave caps every cross-site `Referer` at the origin and never sends the path ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), shipped in 1.19). That is identical to what GitHub sends from a profile page, so the server cannot tell the two apart and takes the fallback. The cap applies universally and a site cannot opt out of it, so this is not workaroundable.
+
+Those visitors land on your `back` URL and **the animation still plays** — only the destination is less precise, which is why this degrades quietly rather than breaking.
+
+### Why not use browser history instead
+
+`history.back()` would return the visitor to the exact page regardless of referrer policy, and would work in Brave. It is not used because a history navigation reuses the cached page **and its subresources**, so the image is never re-requested and the animation never replays. Measured in Chrome: a 302 refetches the image, `history.back()` refetches nothing — even when the image is served `no-store`. Since the animation is the point of this project, `mode=auto` always redirects and never steps back through history.
 
 ---
 
