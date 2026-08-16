@@ -15,8 +15,6 @@
 // proxy honours that on a redirect or adopts the headers of whatever it lands on
 // (raw.githubusercontent sends max-age=300). If it adopts them, the README gets
 // stuck on a spent animation for five minutes. Nothing local can answer that.
-import { createHash } from "node:crypto";
-
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
 const DEFAULT_BACK = process.env.PROFILE_URL || "https://github.com/qvd808";
@@ -87,14 +85,9 @@ export async function config(url) {
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
 
-  let hex = "";
-  if (typeof crypto !== "undefined" && crypto.subtle) {
-    const data = new TextEncoder().encode(`${still}|${play}`);
-    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
-    hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-  } else {
-    hex = createHash("sha1").update(`${still}|${play}`).digest("hex");
-  }
+  const data = new TextEncoder().encode(`${still}|${play}`);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
   const key = "eyes:" + hex.slice(0, 12);
   return { back, still, play, key, redirecting: Boolean(still && play) };
 }
