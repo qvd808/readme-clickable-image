@@ -9,7 +9,7 @@
 // guarantees the click and the reload land on the same one. For a personal
 // profile - low traffic, one warm instance, two requests a second apart - that
 // is almost always true. Attach Redis (see DEPLOY.md) and it becomes always.
-import { bundled, config, isPlaying, markPlaying, uncached } from "./_shared.mjs";
+import { bundled, config, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
 export default async function handler(req, res) {
   const url = new URL(req.url || "/", "http://localhost");
@@ -34,13 +34,19 @@ export default async function handler(req, res) {
   // The README's URL carries no query, so visitors cannot land on this.
   const playing = url.searchParams.get("play") === "1" || await isPlaying(cfg.key);
 
-  // Redirect mode: the images live in a repo, so hand the proxy their address
-  // and let GitHub's CDN carry the bytes. The 302 itself stays uncacheable -
-  // whether that survives the hop is the thing this mode exists to find out.
+  // Direct Proxy Mode: if still & play remote URLs are provided, fetch the bytes
+  // directly and return them with no-store headers. This saves an HTTP round-trip
+  // for GitHub's Camo proxy compared to 302 redirecting.
   if (cfg.redirecting) {
-    uncached(res);
-    res.writeHead(302, { Location: playing ? cfg.play : cfg.still });
-    return res.end();
+    const targetUrl = playing ? cfg.play : cfg.still;
+    try {
+      const { data, contentType } = await fetchRemoteAsset(targetUrl);
+      uncached(res, { "Content-Type": contentType });
+      return res.end(req.method === "HEAD" ? undefined : data);
+    } catch (err) {
+      res.writeHead(502, { "Content-Type": "text/plain", "Cache-Control": "no-store" });
+      return res.end(`Failed to fetch remote asset: ${err.message}\n`);
+    }
   }
 
   const { poster, scene } = bundled();

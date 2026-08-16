@@ -44,8 +44,48 @@ const checked = (value, hosts, what) => {
   if (!hosts.has(u.hostname)) {
     throw new Error(`${what} host not allowed: ${u.hostname}`);
   }
+  if (u.hostname === "github.com" && u.pathname.includes("/blob/")) {
+    u.hostname = "raw.githubusercontent.com";
+    u.pathname = u.pathname.replace("/blob/", "/");
+  }
   return u.toString();
 };
+
+const remoteAssetCache = new Map();
+const ASSET_CACHE_TTL = 60000; // 60s memory cache for fast proxying
+
+export async function fetchRemoteAsset(urlStr) {
+  const cached = remoteAssetCache.get(urlStr);
+  if (cached && (Date.now() - cached.time < ASSET_CACHE_TTL)) {
+    return cached.asset;
+  }
+
+  const res = await fetch(urlStr, {
+    headers: { "User-Agent": "readme-clickable-image/1.0" }
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} when fetching ${urlStr}`);
+  }
+
+  let contentType = res.headers.get("content-type") || "";
+  if (!contentType || contentType.includes("text/plain") || contentType.includes("octet-stream")) {
+    const ext = path.extname(new URL(urlStr).pathname).toLowerCase();
+    if (ext === ".svg") contentType = "image/svg+xml";
+    else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+    else if (ext === ".png") contentType = "image/png";
+    else if (ext === ".gif") contentType = "image/gif";
+    else if (ext === ".webp") contentType = "image/webp";
+    else if (ext === ".avif") contentType = "image/avif";
+    else contentType = "image/jpeg";
+  }
+
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const asset = { data: buffer, contentType };
+
+  remoteAssetCache.set(urlStr, { time: Date.now(), asset });
+  return asset;
+}
 
 export function config(url) {
   const q = url.searchParams;
