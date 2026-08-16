@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/", "destination": "/index.html" },
     { "source": "/play", "destination": "/api/eyes?do=play" },
     { "source": "/scene", "destination": "/api/eyes" }
   ]
