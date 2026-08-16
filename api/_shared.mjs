@@ -1,20 +1,3 @@
-// Shared bits for the function.
-//
-// Two ways to answer /scene:
-//
-//   bundled   the images ship with the deployment and are served as bytes
-//   redirect  the images live in a GitHub repo and we 302 to them
-//
-// Redirect mode is the interesting one: the bytes come off GitHub's own CDN, so
-// the origin serves a few hundred bytes per view instead of 142 KB, changing the
-// animation is a push rather than a redeploy, and the service stops being about
-// one person's scene - hand it two URLs and it works for anybody.
-//
-// What it does not change: /scene must still answer no-store, or the proxy stops
-// asking and a click can never change anything. The open question is whether the
-// proxy honours that on a redirect or adopts the headers of whatever it lands on
-// (raw.githubusercontent sends max-age=300). If it adopts them, the README gets
-// stuck on a spent animation for five minutes. Nothing local can answer that.
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
 const DEFAULT_BACK = process.env.PROFILE_URL || "https://github.com/qvd808";
@@ -28,6 +11,14 @@ const ASSET_HOSTS = new Set([
 ]);
 const BACK_HOSTS = new Set(["github.com", "www.github.com"]);
 
+/**
+ * Validates HTTPS URLs and normalizes GitHub blob URLs into raw asset URLs.
+ *
+ * @param {string} value - The input URL string to validate.
+ * @param {Set<string>} hosts - Allowed domain hostnames.
+ * @param {string} what - Parameter name for error reporting.
+ * @returns {string} Normalized HTTPS URL string.
+ */
 const checked = (value, hosts, what) => {
   if (!value) return "";
   let u;
@@ -44,8 +35,14 @@ const checked = (value, hosts, what) => {
 };
 
 const remoteAssetCache = new Map();
-const ASSET_CACHE_TTL = 60000; // 60s memory cache for fast proxying
+const ASSET_CACHE_TTL = 60000;
 
+/**
+ * Fetches remote image assets from allowed GitHub URLs and caches them in memory.
+ *
+ * @param {string} urlStr - The remote image URL to fetch.
+ * @returns {Promise<{data: Buffer, contentType: string}>} Object with raw image Buffer and MIME Content-Type.
+ */
 export async function fetchRemoteAsset(urlStr) {
   const cached = remoteAssetCache.get(urlStr);
   if (cached && (Date.now() - cached.time < ASSET_CACHE_TTL)) {
@@ -79,6 +76,12 @@ export async function fetchRemoteAsset(urlStr) {
   return asset;
 }
 
+/**
+ * Parses query parameters and computes a unique SHA-1 hash key for the asset pair.
+ *
+ * @param {URL} url - Incoming Request URL object.
+ * @returns {Promise<{back: string, still: string, play: string, key: string, redirecting: boolean}>} Config object.
+ */
 export async function config(url) {
   const q = url.searchParams;
   const back = checked(q.get("back") || DEFAULT_BACK, BACK_HOSTS, "back");
@@ -100,6 +103,12 @@ const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const warm = new Map();
 
+/**
+ * Stores active click state for 12 seconds in Upstash Redis and local memory.
+ *
+ * @param {string} key - Hashed asset key.
+ * @returns {Promise<void>}
+ */
 export async function markPlaying(key) {
   warm.set(key, Date.now());
   if (warm.size > 500) {
@@ -108,9 +117,15 @@ export async function markPlaying(key) {
   if (!KV) return;
   await fetch(`${KV}/set/${key}/1?EX=${Math.ceil(WINDOW_MS / 1000)}`,
     { headers: { Authorization: `Bearer ${TOKEN}` }, cache: "no-store" })
-    .catch(() => { /* a lost click beats a 500 on the hero image */ });
+    .catch(() => {});
 }
 
+/**
+ * Checks if the click state is active in Redis or local memory.
+ *
+ * @param {string} key - Hashed asset key.
+ * @returns {Promise<boolean>} True if active; false otherwise.
+ */
 export async function isPlaying(key) {
   const local = Date.now() - (warm.get(key) || 0) < WINDOW_MS;
   if (!KV) return local;
@@ -123,6 +138,13 @@ export async function isPlaying(key) {
   }
 }
 
+/**
+ * Appends HTTP cache-invalidation headers (no-store, no-cache, max-age=0) to response headers.
+ *
+ * @param {Headers|object} resOrHeaders - Web Headers instance or Node response object.
+ * @param {object} extra - Additional header key-value pairs.
+ * @returns {void}
+ */
 export function uncached(resOrHeaders, extra = {}) {
   const headersObj = {
     "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",

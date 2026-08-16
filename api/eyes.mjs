@@ -1,18 +1,15 @@
-// Both routes in one function, on purpose.
-//
-// Vercel compiles each file in api/ into its own lambda with its own memory, so
-// a flag written by a separate /play function is never visible to /scene. One
-// file means one lambda means one module scope, which makes the flag work with
-// no database behind it.
-//
-// The catch is honest: Vercel may still run more than one instance, and nothing
-// guarantees the click and the reload land on the same one. For a personal
-// profile - low traffic, one warm instance, two requests a second apart - that
-// is almost always true. Attach Redis (see DEPLOY.md) and it becomes always.
 export const config = { runtime: "edge" };
 
 import { BLACK_CANVAS, config as getConfig, fetchRemoteAsset, isPlaying, markPlaying, uncached } from "./_shared.mjs";
 
+/**
+ * Handles incoming HTTP requests for /play and /scene endpoints in Vercel Edge Runtime.
+ *
+ * @param {Request} req - Web Standard Request object containing 'still', 'play', and 'back' query parameters.
+ * @returns {Promise<Response>} Web Standard Response:
+ *   - /play: 302 Found redirect to 'back' URL after setting click state.
+ *   - /scene: 200 OK returning image bytes with no-store headers.
+ */
 export default async function handler(req) {
   const rawUrl = req.url || "/";
   const url = new URL(rawUrl, "http://localhost");
