@@ -29,6 +29,8 @@ export default async function handler(req) {
   if (url.pathname.endsWith("/play") || url.searchParams.get("do") === "play") {
     if (cfg.play) {
       await markPlaying(cfg.key);
+      // Pre-warm the animation asset into Edge memory during the redirect!
+      fetchRemoteAsset(cfg.play).catch(() => {});
     }
     const headers = new Headers();
     uncached(headers);
