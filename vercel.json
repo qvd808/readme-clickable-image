@@ -1,7 +1,7 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
-    { "source": "/play", "destination": "/api/eyes?do=play" },
-    { "source": "/scene", "destination": "/api/eyes" }
+    { "source": "/play", "destination": "/api/index?do=play" },
+    { "source": "/scene", "destination": "/api/index" }
   ]
 }

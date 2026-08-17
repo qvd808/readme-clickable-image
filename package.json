@@ -4,6 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node dev.mjs"
+    "dev": "node dev.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "msw": "^2.15.0",
+    "vitest": "^4.1.10"
   }
 }

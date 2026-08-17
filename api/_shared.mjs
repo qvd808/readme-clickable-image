@@ -109,21 +109,14 @@ export function backFromReferer(referer) {
 export async function config(url) {
   const q = url.searchParams;
   const rawBack = (q.get("back") || "").trim();
-  const rawMode = (q.get("mode") || "").trim();
 
-  const isAutoBack = AUTO_BACK.has(rawBack) || AUTO_BACK.has(rawMode);
-
-  let back = "";
-  let backFallback;
-
-  if (isAutoBack) {
-    const fallback = q.get("fallback") || (AUTO_BACK.has(rawBack) ? "" : rawBack);
-    backFallback = checked(fallback || DEFAULT_BACK, BACK_HOSTS, "fallback");
-  } else {
-    back = checked(rawBack || DEFAULT_BACK, BACK_HOSTS, "back");
-    backFallback = back;
+  // 1. Fail fast if no back URL is provided
+  if (!rawBack) {
+    throw new Error("Missing required parameter: 'back'. You must specify where to redirect the user.");
   }
 
+  // 2. Validate the provided URLs
+  const back = checked(rawBack, BACK_HOSTS, "back");
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
 
@@ -131,12 +124,9 @@ export async function config(url) {
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
   const key = "eyes:" + hex.slice(0, 12);
-  return { back, still, play, key, redirecting: Boolean(still && play), isAutoBack, backFallback };
+  
+  return { back, still, play, key };
 }
-
-export const BLACK_CANVAS = Buffer.from(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520"><rect width="100%" height="100%" fill="#000000"/></svg>'
-);
 
 const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;

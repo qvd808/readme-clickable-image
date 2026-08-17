@@ -7,7 +7,7 @@
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.PORT || 8787);
-const eyes = (await import("./api/eyes.mjs")).default;
+const eyes = (await import("./api/api.mjs")).default;
 
 createServer(async (req, res) => {
   const p = new URL(req.url, "http://localhost").pathname;
