@@ -83,11 +83,10 @@ export async function fetchRemoteAsset(urlStr) {
 const AUTO_BACK = new Set(["auto", "referer", "referrer", "history"]);
 
 /**
- * Derives the page a /play click came from out of its Referer header.
- *
- * @param {string} referer - Raw Referer header value; may be empty or absent.
- * @returns {string} Absolute allowed-host URL, or "" if absent, disallowed, or
- *   stripped to a bare origin by the referrer policy of a GitHub profile page.
+ * Extracts and validates the path from a referer URL.
+ * 
+ * @param {string | null} [referer] - Incoming referer header string.
+ * @returns {string}
  */
 export function backFromReferer(referer) {
   if (!referer) return "";

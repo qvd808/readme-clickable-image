@@ -120,4 +120,45 @@ describe('Edge Handler Edge Cases', () => {
         // Without any referer data, it gracefully defaults to the 'back' parameter
         expect(res.headers.get('Location')).toBe('https://github.com/qvd808/fallback-repo');
     });
+
+
+    it('returns 200 with an empty body on HEAD requests for assets', async () => {
+        const req = new Request('http://localhost/scene?still=https://github.com/a.png&back=https://github.com/qvd808', {
+            method: 'HEAD'
+        });
+        
+        const res = await handler(req);
+        
+        expect(res.status).toBe(200);
+        const text = await res.text();
+        expect(text).toBe(''); // HEAD requests must not contain a response body
+    });
+
+    it('returns 502 when fetching a remote asset fails', async () => {
+        // Temporarily mock an error response for a specific asset URL
+        server.use(
+            http.get('https://github.com/broken.png', () => {
+                return new HttpResponse(null, { status: 404 });
+            })
+        );
+
+        const req = new Request('http://localhost/scene?still=https://github.com/broken.png&back=https://github.com/qvd808');
+        const res = await handler(req);
+        
+        expect(res.status).toBe(502);
+        const text = await res.text();
+        expect(text).toContain('Failed to fetch remote asset');
+    });
+
+
+    it('serves fallback black SVG canvas when neither still nor play images are provided', async () => {
+        const req = new Request('http://localhost/scene?back=https://github.com/qvd808');
+        const res = await handler(req);
+        
+        expect(res.status).toBe(200);
+        expect(res.headers.get('Content-Type')).toBe('image/svg+xml');
+        const text = await res.text();
+        expect(text).toContain('<svg');
+    });
+
 })

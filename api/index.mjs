@@ -28,23 +28,20 @@ export default async function handler(req) {
     return new Response(errorMessage + "\n", { status: 400, headers });
   }
 
-  if (url.pathname.endsWith("/play") || url.searchParams.get("do") === "play") {
+  if (url.pathname.endsWith("/play")) {
     if (cfg.play) {
       await markPlaying(cfg.key);
-      // Pre-warm the animation asset into Edge memory during the redirect!
       fetchRemoteAsset(cfg.play).catch(() => {});
     }
-
     const fromReferer = cfg.isAutoMode ? backFromReferer(req.headers.get("referer") || "") : "";
     const headers = new Headers();
     uncached(headers, cfg.isAutoMode ? { "Vary": "Referer" } : {});
-
     headers.set("Location", fromReferer || cfg.back);
     return new Response(null, { status: 302, headers });
   }
 
   // Only play if 'play' URL is present and active
-  const playing = Boolean(cfg.play) && (url.searchParams.get("play") === "1" || await isPlaying(cfg.key));
+  const playing = Boolean(cfg.play) && await isPlaying(cfg.key);
   const targetUrl = playing ? cfg.play : cfg.still;
 
   if (targetUrl) {
