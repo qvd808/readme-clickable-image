@@ -100,17 +100,27 @@ export function backFromReferer(referer) {
   return u.toString();
 }
 
+
+/**
+ * @typedef {Object} AppConfig
+ * @property {string} back
+ * @property {string} still
+ * @property {string} play
+ * @property {string} key
+ * @property {boolean} isAutoMode
+ */
+
 /**
  * Parses query parameters and computes a unique SHA-1 hash key for the asset pair.
  *
  * @param {URL} url - Incoming Request URL object.
- * @returns {Promise<{back: string, still: string, play: string, key: string, redirecting: boolean, isAutoBack: boolean, backFallback: string}>} Config object.
+ * @returns {Promise<AppConfig>} Config object.
  */
 export async function config(url) {
   const q = url.searchParams;
   const rawBack = (q.get("back") || "").trim();
 
-  // 1. Fail fast if no back URL is provided
+  // 1. Fail fast if no back URL is provided (required as fallback)
   if (!rawBack) {
     throw new Error("Missing required parameter: 'back'. You must specify where to redirect the user.");
   }
@@ -120,13 +130,21 @@ export async function config(url) {
   const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
   const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
 
+  // 3. Check if auto mode is requested
+  const isAutoMode = q.get("mode") === "auto";
+
+  // 4. Generate unique key
   const data = new TextEncoder().encode(`${still}|${play}`);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
   const key = "eyes:" + hex.slice(0, 12);
   
-  return { back, still, play, key };
-}
+  return { back, still, play, key, isAutoMode };
+};
+
+export const BLACK_CANVAS = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520"><rect width="100%" height="100%" fill="#000000"/></svg>'
+);
 
 const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
@@ -172,10 +190,16 @@ export async function isPlaying(key) {
 }
 
 /**
+ * @typedef {Object} ResponseWithHeaders
+ * @property {(name: string, value: string) => void} [setHeader]
+ * @property {(name: string, value: string) => void} [set]
+ */
+
+/**
  * Appends HTTP cache-invalidation headers (no-store, no-cache, max-age=0) to response headers.
  *
- * @param {Headers|object} resOrHeaders - Web Headers instance or Node response object.
- * @param {object} extra - Additional header key-value pairs.
+ * @param {Headers | ResponseWithHeaders} resOrHeaders - Web Headers instance or Node response object.
+ * @param {Record<string, string>} [extra] - Additional header key-value pairs.
  * @returns {void}
  */
 export function uncached(resOrHeaders, extra = {}) {
@@ -186,10 +210,9 @@ export function uncached(resOrHeaders, extra = {}) {
     ...extra
   };
 
-  if (resOrHeaders && typeof resOrHeaders.setHeader === "function") {
+  if (resOrHeaders && 'setHeader' in resOrHeaders && typeof resOrHeaders.setHeader === "function") {
     for (const [k, v] of Object.entries(headersObj)) resOrHeaders.setHeader(k, v);
-  } else if (resOrHeaders && typeof resOrHeaders.set === "function") {
+  } else if (resOrHeaders && 'set' in resOrHeaders && typeof resOrHeaders.set === "function") {
     for (const [k, v] of Object.entries(headersObj)) resOrHeaders.set(k, v);
   }
 }
-

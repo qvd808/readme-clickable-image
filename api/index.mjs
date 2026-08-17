@@ -21,7 +21,11 @@ export default async function handler(req) {
   } catch (err) {
     const headers = new Headers();
     uncached(headers, { "Content-Type": "text/plain" });
-    return new Response(err.message + "\n", { status: 400, headers });
+
+    // Safely extract the message whether it's an Error object or something else
+    const errorMessage = err instanceof Error ? err.message : String(err);
+
+    return new Response(errorMessage + "\n", { status: 400, headers });
   }
 
   if (url.pathname.endsWith("/play") || url.searchParams.get("do") === "play") {
@@ -30,10 +34,12 @@ export default async function handler(req) {
       // Pre-warm the animation asset into Edge memory during the redirect!
       fetchRemoteAsset(cfg.play).catch(() => {});
     }
-    const fromReferer = cfg.isAutoBack ? backFromReferer(req.headers.get("referer")) : "";
+
+    const fromReferer = cfg.isAutoMode ? backFromReferer(req.headers.get("referer") || "") : "";
     const headers = new Headers();
-    uncached(headers, cfg.isAutoBack ? { "Vary": "Referer" } : {});
-    headers.set("Location", fromReferer || cfg.backFallback);
+    uncached(headers, cfg.isAutoMode ? { "Vary": "Referer" } : {});
+
+    headers.set("Location", fromReferer || cfg.back);
     return new Response(null, { status: 302, headers });
   }
 
@@ -46,11 +52,19 @@ export default async function handler(req) {
       const { data, contentType } = await fetchRemoteAsset(targetUrl);
       const headers = new Headers();
       uncached(headers, { "Content-Type": contentType });
-      return new Response(req.method === "HEAD" ? null : data, { status: 200, headers });
+      const body = req.method === "HEAD" ? null : new Uint8Array(data);
+
+      return new Response(body, { status: 200, headers });
+
     } catch (err) {
+
       const headers = new Headers();
       uncached(headers, { "Content-Type": "text/plain" });
-      return new Response(`Failed to fetch remote asset: ${err.message}\n`, { status: 502, headers });
+
+      // Safely extract the message whether it's an Error object or something else
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      return new Response(`Failed to fetch remote asset: ${errorMessage}\n`, { status: 502, headers });
     }
   }
 

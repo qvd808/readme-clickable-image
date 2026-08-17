@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "strict": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "DOM"]
+  },
+  "include": ["**/*.mjs", "**/*.js"],
+  "exclude": ["node_modules", "dist"]
+}
