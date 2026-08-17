@@ -34,6 +34,10 @@ const checked = (value, hosts, what) => {
   return u.toString();
 };
 
+/**
+ * In-memory cache for fetched remote images.
+ * @type {Map<string, {time: number, asset: {data: Buffer, contentType: string}}>}
+ */
 const remoteAssetCache = new Map();
 const ASSET_CACHE_TTL = 60000;
 
@@ -136,6 +140,10 @@ export const BLACK_CANVAS = Buffer.from(
 
 const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+/**
+ * In-memory local cache tracking recently clicked asset keys.
+ * @type {Map<string, number>}
+ */
 const warm = new Map();
 
 /**
