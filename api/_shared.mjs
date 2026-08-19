@@ -1,12 +1,5 @@
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
-export const ASSET_HOSTS = new Set([
-  "raw.githubusercontent.com", "objects.githubusercontent.com",
-  "gist.githubusercontent.com", "user-images.githubusercontent.com",
-  "github.com",
-]);
-export const BACK_HOSTS = new Set(["github.com", "www.github.com"]);
-
 /**
  * In-memory cache for fetched remote images.
  * @type {Map<string, {time: number, asset: {data: Buffer, contentType: string}}>}
@@ -51,23 +44,6 @@ export async function fetchRemoteAsset(urlStr) {
 
   remoteAssetCache.set(urlStr, { time: Date.now(), asset });
   return asset;
-}
-
-/**
- * Extracts and validates the path from a referer URL.
- * 
- * @param {string | null} [referer] - Incoming referer header string.
- * @returns {string}
- */
-export function backFromReferer(referer) {
-  if (!referer) return "";
-  let u;
-  try { u = new URL(referer); } catch { return ""; }
-  if (u.protocol !== "https:") return "";
-  if (!BACK_HOSTS.has(u.hostname)) return "";
-  if (u.pathname === "" || u.pathname === "/") return "";
-  u.hash = "";
-  return u.toString();
 }
 
 /**

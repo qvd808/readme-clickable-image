@@ -99,7 +99,31 @@ describe('Edge Handler — Request Flow & Redirects', () => {
 
         expect(res.status).toBe(400);
         const text = await res.text();
-        expect(text).toContain("Missing required parameter: 'back'");
+        expect(text).toContain("Params back is required");
+    });
+
+    it ('Throws error when back parameter is not in allowed hosts', async () => {
+        const req = new Request('http://localhost/play?still=https://github.com/poster.webp&play=https://github.com/eyes-once.svg&back=https://evil.com/qvd808');
+        const res = await handler(req);
+
+        expect(res.status).toBe(400);
+        const text = await res.text();
+        expect(text).toContain("back parameters contains URL not from ALLOWED_HOSTS");
+    });
+
+    it ('Throws error when back parameter is not https', async () => {
+        const req = new Request('http://localhost/play?still=https://github.com/poster.webp&play=https://github.com/eyes-once.svg&back=http://github.com/qvd808');
+        const res = await handler(req);
+
+        expect(res.status).toBe(400);
+        const text = await res.text();
+        expect(text).toContain("Not an HTTPS request - REJECT");
+    });
+
+    it('serves the black canvas when still is on a disallowed host', async () => {
+    const res = await handler(new Request('http://localhost/scene?still=https://evil.com/x.webp'));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('fill="#000000"');
     });
 
     it('redirects /play requests', async () => {
@@ -561,57 +585,5 @@ describe('Play State — Local Memory & Redis Sync', () => {
         // Second read should find nothing in either layer
         const second = await localIsPlaying('one-shot');
         expect(second).toBe(false);
-    });
-});
-
-// ============================================================================
-// 6. CONFIG — VALIDATION & NORMALIZATION
-// ============================================================================
-describe('Config — Validation & Normalization', () => {
-    /** @type {any} */
-    let getConfig;
-
-    beforeEach(async () => {
-        retire_memory();
-        const shared = await import("../api/_shared.mjs");
-        getConfig = shared.config;
-    });
-
-    it('throws when back URL is not HTTPS', async () => {
-        const url = new URL('http://localhost/play?back=http://github.com/qvd808');
-        await expect(getConfig(url)).rejects.toThrow('must be https');
-    });
-
-    it('throws when host is not in allowed list', async () => {
-        const url = new URL('http://localhost/play?back=https://evil.com/qvd808');
-        await expect(getConfig(url)).rejects.toThrow('host not allowed');
-    });
-
-    it('throws when still URL uses a disallowed host', async () => {
-        const url = new URL('http://localhost/play?back=https://github.com/qvd808&still=https://evil.com/img.webp');
-        await expect(getConfig(url)).rejects.toThrow('host not allowed');
-    });
-
-    it('normalizes github.com/blob/ URLs to raw.githubusercontent.com', async () => {
-        const url = new URL('http://localhost/play?back=https://github.com/qvd808&still=https://github.com/user/repo/blob/main/poster.webp');
-        const cfg = await getConfig(url);
-        expect(cfg.still).toBe('https://raw.githubusercontent.com/user/repo/main/poster.webp');
-    });
-
-    it('generates identical keys for identical still/play pairs regardless of back URL', async () => {
-        const url1 = new URL('http://localhost/play?back=https://github.com/a&still=https://github.com/x.webp&play=https://github.com/y.svg');
-        const url2 = new URL('http://localhost/play?back=https://github.com/b&still=https://github.com/x.webp&play=https://github.com/y.svg');
-        const cfg1 = await getConfig(url1);
-        const cfg2 = await getConfig(url2);
-        expect(cfg1.key).toBe(cfg2.key);
-        expect(cfg1.back).not.toBe(cfg2.back);
-    });
-
-    it('uses empty defaults for missing optional still and play parameters', async () => {
-        const url = new URL('http://localhost/play?back=https://github.com/qvd808');
-        const cfg = await getConfig(url);
-        expect(cfg.still).toBe('');
-        expect(cfg.play).toBe('');
-        expect(cfg.isAutoMode).toBe(false);
     });
 });

@@ -42,8 +42,6 @@ It uses a stateful Edge Proxy that intercepts link clicks (`/play`), updates a t
 
 * **What happens:** Clicking the image above triggers the action animation (`eyes-once.svg`) for 12 seconds, then automatically resets back to `poster.webp` when idle.
 
----
-
 ## 🚀 Quick Start Guide
 
 You can use the shared server at `https://readme-clickable-image.vercel.app` out of the box for your own GitHub README!
@@ -59,22 +57,30 @@ Copy and paste this HTML snippet into your `README.md`:
 
 ```html
 <a href="https://readme-clickable-image.vercel.app/play?back=https://github.com/YOUR_USER/YOUR_REPO&still=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/still.webp&play=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/animation.svg">
-  <img src="https://readme-clickable-image.vercel.app/scene?back=https://github.com/YOUR_USER/YOUR_REPO&still=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/still.webp&play=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/animation.svg" width="100%" alt="Clickable README Image">
+  <img src="https://readme-clickable-image.vercel.app/scene?still=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/still.webp&play=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/animation.svg" width="100%" alt="Clickable README Image">
 </a>
 ```
-
-> **Tip:** Standard GitHub web URLs (containing `/blob/`) are automatically normalized to raw GitHub asset URLs by the server!
-
----
-
 ## ⚙️ URL Parameter Reference
+
+The two endpoints read different parameters. Keep `still` and `play` **identical in both URLs** — the play state is keyed on that pair, so any difference means the click flips a flag `/scene` never reads.
+
+### `/play` — the `<a href>`
 
 | Parameter | Required? | Description |
 | --- | --- | --- |
-| `still` | Optional | URL of the idle image (static image or looping animated WebP/GIF). **If missing:** Displays a black canvas (`#000000`). |
-| `play` | Optional | URL of the triggered animation image (`.svg`, `.gif`, `.webp`). **If missing:** Clicks remain static without playing an animation. |
-| `back` | Required | Destination GitHub repository or profile URL to redirect the visitor after clicking. |
-| `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from instead of a fixed URL. `back` then acts as the fallback. |
+| `back` | **Required** | Where to send the visitor after the click. Must be HTTPS on `github.com` or `www.github.com`; anything else returns 400. |
+| `play` | Optional | Animation asset. **If present:** flips the play flag and pre-warms the asset. **If missing:** the click still redirects, but nothing animates. |
+| `still` | Optional | Idle asset. Never served by this endpoint — it only contributes to the state key. |
+| `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from, read from the `Referer`. Falls back to `back`. |
+
+### `/scene` — the `<img src>`
+
+| Parameter | Required? | Description |
+| --- | --- | --- |
+| `still` | Optional | Idle image. **If missing, malformed, or on a disallowed host:** displays a black canvas (`#000000`). |
+| `play` | Optional | Animation, served while the play flag is set. **If missing:** always serves `still`. |
+| `back` | Ignored | Not read by this endpoint. |
+| `mode` | Ignored | Not read by this endpoint. |
 
 ## Known issue
 
@@ -89,23 +95,6 @@ Copy and paste this HTML snippet into your `README.md`:
 | Brave | `https://github.com/` (origin only) | falls back to `back` |
 
 > Brave caps every cross-site `Referer` at the origin and never sends the path ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), shipped in 1.19). That is identical to what GitHub sends from a profile page, so the server cannot tell the two apart and takes the fallback. The cap applies universally and a site cannot opt out of it, so this is not workaroundable.
-
-> **Shared state, by design:** the Redis key is derived from the `still|play` pair only, so a click activates the animation for *everyone* viewing that image during the 12-second window. Per-visitor state is not possible here: `/scene` is requested by GitHub's Camo servers, not by the visitor's browser, so the visitor is never visible to this server — and the `<img src>` in an already-rendered README cannot be given a per-click token.
-
----
-
-## 💻 Local Development
-
-To test the template server locally on port 8787:
-
-```bash
-npm run dev     # starts local server on http://localhost:8787
-```
-
-* Test `/scene`: `http://localhost:8787/scene?still=STILL_URL&play=PLAY_URL`
-* Test `/play`: `http://localhost:8787/play?back=BACK_URL&still=STILL_URL&play=PLAY_URL`
-
----
 
 ## 📄 License
 
