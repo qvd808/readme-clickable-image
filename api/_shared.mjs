@@ -5,12 +5,6 @@ const ASSETS_TIMEOUT_MS = 10000;
 const MAX_ASSET_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /**
- * Fetches remote image assets from allowed GitHub URLs and caches them in memory.
- *
- * @param {string} urlStr - The remote image URL to fetch.
- * @returns {Promise<{data: Buffer, contentType: string}>} Object with raw image Buffer and MIME Content-Type.
- */
-/**
  * Opens a remote image asset for streaming, without buffering it.
  *
  * @param {string} urlStr - The remote image URL to fetch.
@@ -93,38 +87,44 @@ const KV = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 /**
- * Stores click state in Redis
+ * Sets the click flag in Redis with a WINDOW_MS expiry.
  *
  * @param {string} key - Hashed asset key.
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves once the flag is written.
+ * @throws {Error} When Redis is unreachable or rejects the write.
  */
 export async function markPlaying(key) {
   if (!KV) return;
-  await fetch(`${KV}/set/${key}/1?EX=${Math.ceil(WINDOW_MS / 1000)}`,
-    { headers: { Authorization: `Bearer ${TOKEN}` }, cache: "no-store", signal: AbortSignal.timeout(REDIS_TIMEOUT_MS) })
-    .catch(() => {});
+  const r = await fetch(`${KV}/set/${key}/1?EX=${Math.ceil(WINDOW_MS / 1000)}`,
+    {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(REDIS_TIMEOUT_MS)
+    }
+  );
+  if (!r.ok) throw new Error(`upstash set ${r.status}`);
 }
 
+
 /**
- * Checks if the click state is active in Redis
+ * Checks if the click state is active in Redis.
+ * Any failure — unreachable, unauthorized, malformed — is throw as an Errors, caller handles
  *
  * @param {string} key - Hashed asset key.
- * @returns {Promise<boolean>} True if active; false otherwise.
+ * @returns {Promise<boolean>} True while the flag is set; false when absent or Redis is unconfigured.
  */
+
 export async function isPlaying(key) {
-  if (!KV ) return false;
-  try {
-    const r = await fetch(`${KV}/getdel/${key}`,
-      { 
-        headers: { Authorization: `Bearer ${TOKEN}` }, 
-        cache: "no-store", 
-        signal: AbortSignal.timeout(REDIS_TIMEOUT_MS) 
-      }
-    );
-    return (await r.json()).result === "1";
-  } catch {
-    return false;
-  }
+  if (!KV) return false;
+  const r = await fetch(`${KV}/getdel/${key}`,
+    { 
+      headers: { Authorization: `Bearer ${TOKEN}` }, 
+      cache: "no-store", 
+      signal: AbortSignal.timeout(REDIS_TIMEOUT_MS) 
+    }
+  );
+  if (!r.ok) throw new Error(`upstash getdel ${r.status}`);
+  return (await r.json()).result === "1";
 }
 
 /**

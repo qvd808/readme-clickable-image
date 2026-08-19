@@ -21,7 +21,7 @@ import {
  * @param {string | null} [referer] - Incoming referer header string.
  * @returns {string}
  */
-export function backFromReferer(referer) {
+function backFromReferer(referer) {
   if (!referer) return "";
   let u;
   try { u = new URL(referer); } catch { return ""; }
@@ -31,7 +31,6 @@ export function backFromReferer(referer) {
   u.hash = "";
   return u.toString();
 }
-
 
 /**
  * Response template building for cache-invalidation headers.
@@ -46,27 +45,21 @@ function buildResponse(body, status) {
   return new Response(body, { status, headers });
 }
 /**
- * Builds a 200 image response, omitting the body for HEAD requests.
+ * Builds a 200 image response
  *
- * @param {Request} req - Incoming request, used to detect HEAD.
  * @param {BodyInit | null} body - Image bytes or an upstream body stream.
  * @param {string} contentType - MIME type to advertise.
  * @returns {Response} Response object
  */
-function buildImage(req, body, contentType) {
+function buildImage(body, contentType) {
   const headers = new Headers();
   uncached(headers, { "Content-Type": contentType });
-
-  if (req.method === "HEAD") {
-    if (body instanceof ReadableStream) body.cancel();
-    return new Response(null, { status: 200, headers });
-  }
 
   return new Response(body, { status: 200, headers });
 }
 
 /**
- * Handles /play: records the click, pre-warms the animation and redirects.
+ * Handles /play: records the click, redirect the URL
  *
  * @param {Request} req - Incoming request.
  * @param {URL} url - Parsed request URL.
@@ -86,7 +79,7 @@ async function handlePlay(req, url) {
     return buildResponse("Params back is not a valid URL", 400);
   }
 
-  if (back.protocol !== "https:" ) {
+  if (back.protocol !== "https:") {
     return buildResponse("Not an HTTPS request - REJECT", 400);
   }
 
@@ -108,8 +101,13 @@ async function handlePlay(req, url) {
 
 
   if (play) {
-    await markPlaying(await assetKey(still, play));
+    try {
+      await markPlaying(await assetKey(still, play));
+    } catch (err) {
+      console.error(`[redis] flag write failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
+
 
   const fromReferer = params.isAutoMode ? backFromReferer(req.headers.get("referer") || "") : "";
 
@@ -142,16 +140,23 @@ async function handleScene(req, url) {
   } catch {}
 
   const key = await assetKey(still, play);
-  const playing = Boolean(play) && await isPlaying(key);
+  let playing = false;
+  if (play) {
+    try {
+      playing = await isPlaying(key);
+    } catch (err) {
+      console.error(`[redis] flag lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
   const assetUrl = playing ? play : still;
 
   if (!assetUrl) {
-    return buildImage(req, BLACK_CANVAS, "image/svg+xml")
+    return buildImage(BLACK_CANVAS, "image/svg+xml")
   }
 
   try {
     const asset = await fetchRemoteAsset(assetUrl);
-    return buildImage(req, asset.body, asset.contentType);
+    return buildImage(asset.body, asset.contentType);
   } catch (err) {
     return buildResponse(`Failed to fetch remote asset: ${err instanceof Error ? err.message : String(err)}`, 502);
   }

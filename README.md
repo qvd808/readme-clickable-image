@@ -22,10 +22,10 @@ It uses a stateful Edge Proxy that intercepts link clicks (`/play`), updates a t
 ```
 [ Visitor Clicks Image in README ]
               │
-              ├──> 1. Hits /play (Sets Redis state flag = true & pre-warms SVG into Edge RAM)
+              ├──> 1. Hits /play (Sets Redis state flag = true)
               │
               └──> 2. Redirects back to GitHub -> Camo requests /scene
-                   └── /scene streams SVG animation from Edge RAM (no origin round-trip)
+                   └── /scene streams SVG animation
 ```
 
 ---
@@ -69,7 +69,7 @@ The two endpoints read different parameters. Keep `still` and `play` **identical
 | Parameter | Required? | Description |
 | --- | --- | --- |
 | `back` | **Required** | Where to send the visitor after the click. Must be HTTPS on `github.com` or `www.github.com`; anything else returns 400. |
-| `play` | Optional | Animation asset. **If present:** flips the play flag and pre-warms the asset. **If missing:** the click still redirects, but nothing animates. |
+| `play` | Optional | Animation asset.If not present, well some other assets going to be change not your assets
 | `still` | Optional | Idle asset. Never served by this endpoint — it only contributes to the state key. |
 | `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from, read from the `Referer`. Falls back to `back`. |
 
@@ -81,21 +81,3 @@ The two endpoints read different parameters. Keep `still` and `play` **identical
 | `play` | Optional | Animation, served while the play flag is set. **If missing:** always serves `still`. |
 | `back` | Ignored | Not read by this endpoint. |
 | `mode` | Ignored | Not read by this endpoint. |
-
-## Known issue
-
-### Browser support
-
-`mode=auto` depends on the browser passing the `Referer` along. Measured by clicking the real link on a real GitHub repo page:
-
-| Browser | `Referer` received | Result |
-| --- | --- | --- |
-| Chrome / Edge | `https://github.com/USER/REPO` | returns to the repo |
-| Firefox | `https://github.com/USER/REPO` | returns to the repo |
-| Brave | `https://github.com/` (origin only) | falls back to `back` |
-
-> Brave caps every cross-site `Referer` at the origin and never sends the path ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), shipped in 1.19). That is identical to what GitHub sends from a profile page, so the server cannot tell the two apart and takes the fallback. The cap applies universally and a site cannot opt out of it, so this is not workaroundable.
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).

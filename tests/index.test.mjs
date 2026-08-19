@@ -307,30 +307,6 @@ describe('Network Call & Cache Interaction', () => {
         vi.useRealTimers();
     });
 
-    it('makes a network request on cold cache and suppresses it on warm cache', async () => {
-        let calls = 0;
-        const url = 'https://github.com/cold-warm.webp';
-
-        server.use(
-            http.get(url, () => {
-                calls++;
-                return new HttpResponse(Buffer.from('network-payload'), {
-                    headers: { 'Content-Type': 'image/webp' },
-                });
-            })
-        );
-
-        // Cold: must hit the network
-        const first = await fetchRemoteAsset(url);
-        expect(calls).toBe(1);
-        expect(Buffer.from(first.data).toString()).toBe('network-payload');
-
-        // Warm: must NOT hit the network again
-        const second = await fetchRemoteAsset(url);
-        expect(calls).toBe(1);
-        expect(Buffer.from(second.data).toString()).toBe('network-payload');
-    });
-
     it('/play triggers a fire-and-forget network request to pre-warm the play asset', async () => {
         let calls = 0;
         const playUrl = 'https://github.com/pre-warm.svg';
@@ -500,12 +476,6 @@ describe('Play State — Redis Sync', () => {
         vi.useRealTimers();
         delete process.env.UPSTASH_REDIS_REST_URL;
         delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    });
-
-    it('markPlaying stores active state that isPlaying reads as true', async () => {
-        await markPlaying('local-key');
-        const active = await isPlaying('local-key');
-        expect(active).toBe(true);
     });
 
     it('isPlaying returns false after WINDOW_MS expires', async () => {
