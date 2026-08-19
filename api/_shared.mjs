@@ -1,15 +1,14 @@
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
-const DEFAULT_BACK = process.env.PROFILE_URL || "https://github.com/qvd808";
 const DEFAULT_STILL = process.env.STILL_URL || "";
 const DEFAULT_PLAY = process.env.PLAY_URL || "";
 
-const ASSET_HOSTS = new Set([
+export const ASSET_HOSTS = new Set([
   "raw.githubusercontent.com", "objects.githubusercontent.com",
   "gist.githubusercontent.com", "user-images.githubusercontent.com",
   "github.com",
 ]);
-const BACK_HOSTS = new Set(["github.com", "www.github.com"]);
+export const BACK_HOSTS = new Set(["github.com", "www.github.com"]);
 
 /**
  * Validates HTTPS URLs and normalizes GitHub blob URLs into raw asset URLs.
@@ -80,8 +79,6 @@ export async function fetchRemoteAsset(urlStr) {
   return asset;
 }
 
-const AUTO_BACK = new Set(["auto", "referer", "referrer", "history"]);
-
 /**
  * Extracts and validates the path from a referer URL.
  * 
@@ -99,47 +96,80 @@ export function backFromReferer(referer) {
   return u.toString();
 }
 
-
 /**
- * @typedef {Object} AppConfig
+ * @typedef {Object} RawParams
  * @property {string} back
  * @property {string} still
  * @property {string} play
- * @property {string} key
  * @property {boolean} isAutoMode
  */
 
 /**
- * Parses query parameters and computes a unique SHA-1 hash key for the asset pair.
- *
+ * Reads query parameters without validating them.
  * @param {URL} url - Incoming Request URL object.
- * @returns {Promise<AppConfig>} Config object.
+ * @returns {RawParams} Raw query parameters.
  */
-export async function config(url) {
+export function readParams(url) {
   const q = url.searchParams;
-  const rawBack = (q.get("back") || "").trim();
+  return {
+    back: (q.get("back") || "").trim(),
+    still: (q.get("still") || "").trim(),
+    play: (q.get("play") || "").trim(),
+    isAutoMode: q.get("mode") === "auto"
+  };
+}
 
-  // 1. Fail fast if no back URL is provided (required as fallback)
-  if (!rawBack) {
-    throw new Error("Missing required parameter: 'back'. You must specify where to redirect the user.");
-  }
+/**
+ * @typedef {{ok: true, value: string} | {ok: false, error: string}} CheckedResult
+ */
 
-  // 2. Validate the provided URLs
-  const back = checked(rawBack, BACK_HOSTS, "back");
-  const still = checked(q.get("still") || DEFAULT_STILL, ASSET_HOSTS, "still");
-  const play = checked(q.get("play") || DEFAULT_PLAY, ASSET_HOSTS, "play");
+/**
+ * Validates an HTTPS URL against an allowlist and normalize Github blob URLS.
+ * 
+ * @param {string} paramValue - Raw value, empty is treated as absent, not invalid
+ * @param {Set<string>} hosts - Allowed hostnames
+ * @param {string} paramName - parameter name used in error messages
+ * @returns {CheckedResult} Result object with either a valid value or an error message.
+ */
+function checkUrl(paramValue, hosts, paramName) {
+  if (!paramValue) return { ok: true, value: "" };
+  let u;
+  try { u = new URL(paramValue); } catch { return { ok: false, error: `${paramName} is not a valid URL` }; }
+  if (u.protocol !== "https:") return { ok: false, error: `${paramName} must be an HTTPS URL` };
+  if (!hosts.has(u.hostname)) return { ok: false, error: `${paramName} is not an allowed hostname` };
+  return { ok: true, value: u.toString() };
+}
 
-  // 3. Check if auto mode is requested
-  const isAutoMode = q.get("mode") === "auto";
+/**
+ * Validates an assets URL against the asset host allowedlist
+ * 
+ * @param {string} value - Raw still or play value
+ * @param {string} name - Parameter name used in error text
+ * @returns {CheckedResult}
+ */
+export const CheckAsset = (value, name) => checkUrl(value, ASSET_HOSTS, name);
 
-  // 4. Generate unique key
+/**
+ * Validates an assets URL against the asset host allowedlist
+ * 
+ * @param {string} value - Raw still or play value
+ * @returns {CheckedResult}
+ */
+export const CheckBack = (value) => checkUrl(value, BACK_HOSTS, "back");
+
+/**
+ * Generate the shared state key
+ * 
+ * @param {string} still - Still image URL
+ * @param {string} play - Play image URL
+ * @returns {Promise<string>} Redis key
+ */
+export async function assetKey(still, play) {
   const data = new TextEncoder().encode(`${still}|${play}`);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-  const key = "eyes:" + hex.slice(0, 12);
-  
-  return { back, still, play, key, isAutoMode };
-};
+  return "eyes:" + hex.slice(0, 12);
+}
 
 export const BLACK_CANVAS = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520"><rect width="100%" height="100%" fill="#000000"/></svg>'
