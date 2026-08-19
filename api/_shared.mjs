@@ -8,7 +8,7 @@ const MAX_ASSET_BYTES = 10 * 1024 * 1024; // 10 MB
  * Opens a remote image asset for streaming, without buffering it.
  *
  * @param {string} urlStr - The remote image URL to fetch.
- * @returns {Promise<{body: ReadableStream<Uint8Array> | null, contentType: string}>} Body stream and MIME type.
+ * @returns {Promise<{body: ReadableStream<Uint8Array> | null, contentType: string, contentLength: string | null}>} Body stream, MIME type and content length.
  */
 export async function fetchRemoteAsset(urlStr) {
   const res = await fetch(urlStr, {
@@ -20,10 +20,10 @@ export async function fetchRemoteAsset(urlStr) {
     throw new Error(`HTTP ${res.status} when fetching ${urlStr}`);
   }
 
-  const declared = Number(res.headers.get("content-length") || 0);
-  if (declared > MAX_ASSET_BYTES) {
+  const contentLength = res.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_ASSET_BYTES) {
     await res.body?.cancel();
-    throw new Error(`asset too large: ${declared} bytes`);
+    throw new Error(`asset too large: ${contentLength} bytes`);
   }
 
   let contentType = res.headers.get("content-type") || "";
@@ -38,7 +38,7 @@ export async function fetchRemoteAsset(urlStr) {
     else contentType = "image/jpeg";
   }
 
-  return { body: res.body, contentType };
+  return { body: res.body, contentType, contentLength };
 }
 
 /**

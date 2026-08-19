@@ -49,12 +49,13 @@ function buildResponse(body, status) {
  *
  * @param {BodyInit | null} body - Image bytes or an upstream body stream.
  * @param {string} contentType - MIME type to advertise.
+ * @param {string | null} contentLength - Content length header value.
  * @returns {Response} Response object
  */
-function buildImage(body, contentType) {
+function buildImage(body, contentType, contentLength = null) {
   const headers = new Headers();
   uncached(headers, { "Content-Type": contentType });
-
+  if (contentLength) headers.set("Content-Length", contentLength);
   return new Response(body, { status: 200, headers });
 }
 
@@ -156,7 +157,7 @@ async function handleScene(req, url) {
 
   try {
     const asset = await fetchRemoteAsset(assetUrl);
-    return buildImage(asset.body, asset.contentType);
+    return buildImage(asset.body, asset.contentType, asset.contentLength);
   } catch (err) {
     return buildResponse(`Failed to fetch remote asset: ${err instanceof Error ? err.message : String(err)}`, 502);
   }
