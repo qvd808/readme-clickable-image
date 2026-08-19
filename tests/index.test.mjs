@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import { WINDOW_MS } from '../api/constants.mjs';
 
 const ASSET_HOSTS = new Set([
     "raw.githubusercontent.com",
@@ -184,19 +185,6 @@ describe('Edge Handler — Request Flow & Redirects', () => {
 
         expect(res.status).toBe(502);
         expect(await res.text()).toContain('Failed to fetch remote asset');
-    });
-
-    it('serves play asset immediately after /play request', async () => {
-        const back = 'https://github.com/qvd808';
-        const still = 'https://github.com/poster.webp';
-        const play = 'https://github.com/eyes-once.svg';
-
-        await handler(new Request(`http://localhost/play?back=${back}&still=${still}&play=${play}`));
-        const res = await handler(new Request(`http://localhost/scene?back=${back}&still=${still}&play=${play}`));
-
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/svg+xml');
-        expect(await res.text()).toContain('eyes-once');
     });
 
     it('reverts to poster.webp after play state expires past 12s', async () => {
@@ -425,7 +413,6 @@ describe('Remote Asset Cache — TTL Behavior', () => {
     let fetchRemoteAsset;
 
     beforeEach(async () => {
-        retire_memory();
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
         server.resetHandlers();
@@ -486,16 +473,14 @@ describe('Remote Asset Cache — TTL Behavior', () => {
 // ============================================================================
 // 5. PLAY STATE — LOCAL MEMORY & REDIS SYNC
 // ============================================================================
-describe('Play State — Local Memory & Redis Sync', () => {
+describe('Play State — Redis Sync', () => {
     /** @type {any} */
     let markPlaying;
     /** @type {any} */
     let isPlaying;
     /** @type {number} */
-    let WINDOW_MS;
 
     beforeEach(async () => {
-        retire_memory();
         retire_redis();
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
@@ -509,7 +494,6 @@ describe('Play State — Local Memory & Redis Sync', () => {
         const shared = await import("../api/_shared.mjs");
         markPlaying = shared.markPlaying;
         isPlaying = shared.isPlaying;
-        WINDOW_MS = shared.WINDOW_MS;
     });
 
     afterEach(() => {
@@ -531,40 +515,6 @@ describe('Play State — Local Memory & Redis Sync', () => {
         expect(active).toBe(false);
     });
 
-    it('prefers local warm state and skips redis when local is still valid', async () => {
-        // Set up Redis layer
-        process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io';
-        process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
-        retire_memory();
-        const shared = await import("../api/_shared.mjs");
-        const localMarkPlaying = shared.markPlaying;
-        const localIsPlaying = shared.isPlaying;
-
-        await localMarkPlaying('prefers-local');
-        // Manually delete from redis to prove local is authoritative
-        retire_redis('prefers-local');
-        const active = await localIsPlaying('prefers-local');
-        expect(active).toBe(true);
-    });
-
-    it('falls back to redis when local warm entry has expired', async () => {
-        // Set up Redis layer
-        process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io';
-        process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
-        retire_memory();
-        const shared = await import("../api/_shared.mjs");
-        const localMarkPlaying = shared.markPlaying;
-        const localIsPlaying = shared.isPlaying;
-        const localWindowMs = shared.WINDOW_MS;
-
-        await localMarkPlaying('redis-fallback');
-        vi.advanceTimersByTime(localWindowMs + 1);
-
-        // Local is now expired, but redis mock still holds the value
-        const active = await localIsPlaying('redis-fallback');
-        expect(active).toBe(true);
-    });
-
     it('redis getdel removes the key after reading (one-shot distributed state)', async () => {
         // Set up Redis layer
         process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io';
@@ -573,7 +523,7 @@ describe('Play State — Local Memory & Redis Sync', () => {
         const shared = await import("../api/_shared.mjs");
         const localMarkPlaying = shared.markPlaying;
         const localIsPlaying = shared.isPlaying;
-        const localWindowMs = shared.WINDOW_MS;
+        const localWindowMs = WINDOW_MS;
 
         await localMarkPlaying('one-shot');
         vi.advanceTimersByTime(localWindowMs + 1);

@@ -49,14 +49,20 @@ function buildResponse(body, status) {
  * Builds a 200 image response, omitting the body for HEAD requests.
  *
  * @param {Request} req - Incoming request, used to detect HEAD.
- * @param {Uint8Array} data - Raw image bytes.
+ * @param {BodyInit | null} body - Image bytes or an upstream body stream.
  * @param {string} contentType - MIME type to advertise.
  * @returns {Response} Response object
  */
-function buildImage(req, data, contentType) {
+function buildImage(req, body, contentType) {
   const headers = new Headers();
   uncached(headers, { "Content-Type": contentType });
-  return new Response(req.method === "HEAD" ? null : new Uint8Array(data), { status: 200, headers });
+
+  if (req.method === "HEAD") {
+    if (body instanceof ReadableStream) body.cancel();
+    return new Response(null, { status: 200, headers });
+  }
+
+  return new Response(body, { status: 200, headers });
 }
 
 /**
@@ -103,7 +109,6 @@ async function handlePlay(req, url) {
 
   if (play) {
     await markPlaying(await assetKey(still, play));
-    fetchRemoteAsset(play).catch(() => {}); // Needs it to pass the test, will have to check back
   }
 
   const fromReferer = params.isAutoMode ? backFromReferer(req.headers.get("referer") || "") : "";
@@ -146,7 +151,7 @@ async function handleScene(req, url) {
 
   try {
     const asset = await fetchRemoteAsset(assetUrl);
-    return buildImage(req, asset.data, asset.contentType);
+    return buildImage(req, asset.body, asset.contentType);
   } catch (err) {
     return buildResponse(`Failed to fetch remote asset: ${err instanceof Error ? err.message : String(err)}`, 502);
   }

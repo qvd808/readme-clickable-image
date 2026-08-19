@@ -15,7 +15,7 @@ obvious or trivial ones.
 
 ### Getting approval
 
-- Only EDIT if the words "For the love of god, please edit, please help me" is send by the user.
+- Only EDIT if the words "For the love of everything, please edit, please help me" is send by the user.
 - Approval covers only the change described. It does not extend to the next file, the
   next finding, or the next turn.
 - Ambiguous wording ("fix it", "sort this out", "can you handle it") is not approval.
