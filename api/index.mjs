@@ -10,6 +10,7 @@ import {
   isPlaying,
   BLACK_CANVAS,
   fetchRemoteAsset,
+  markPlaying,
 } from "./_shared.mjs";
 
 /**
@@ -38,7 +39,6 @@ function buildImage(req, data, contentType) {
   return new Response(req.method === "HEAD" ? null : new Uint8Array(data), { status: 200, headers });
 }
 
-
 /**
  * Handles /play: records the click, pre-warms the animation and redirects.
  *
@@ -62,6 +62,23 @@ async function handlePlay(req, url) {
 
   if (back.protocol !== "https:" || !BACK_HOSTS.has(back.hostname)) {
     return buildResponse("Params back is not an allowed destination", 400);
+  }
+
+  let still = "";
+  try {
+    const u = new URL(params.still);
+    if (u.protocol === "https:" && ASSET_HOSTS.has(u.hostname)) still = u.toString();
+  } catch {}
+
+  let play = "";
+  try {
+    const u = new URL(params.play);
+    if (u.protocol === "https:" && ASSET_HOSTS.has(u.hostname)) play = u.toString();
+  } catch {}
+
+
+  if (play) {
+    await markPlaying(await assetKey(still, play));
   }
 
   const fromReferer = params.isAutoMode ? backFromReferer(req.headers.get("referer") || "") : "";

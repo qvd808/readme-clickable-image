@@ -1,37 +1,11 @@
 export const WINDOW_MS = Number(process.env.WINDOW_MS || 12000);
 
-const DEFAULT_STILL = process.env.STILL_URL || "";
-const DEFAULT_PLAY = process.env.PLAY_URL || "";
-
 export const ASSET_HOSTS = new Set([
   "raw.githubusercontent.com", "objects.githubusercontent.com",
   "gist.githubusercontent.com", "user-images.githubusercontent.com",
   "github.com",
 ]);
 export const BACK_HOSTS = new Set(["github.com", "www.github.com"]);
-
-/**
- * Validates HTTPS URLs and normalizes GitHub blob URLs into raw asset URLs.
- *
- * @param {string} value - The input URL string to validate.
- * @param {Set<string>} hosts - Allowed domain hostnames.
- * @param {string} what - Parameter name for error reporting.
- * @returns {string} Normalized HTTPS URL string.
- */
-const checked = (value, hosts, what) => {
-  if (!value) return "";
-  let u;
-  try { u = new URL(value); } catch { throw new Error(`${what} is not a URL`); }
-  if (u.protocol !== "https:") throw new Error(`${what} must be https`);
-  if (!hosts.has(u.hostname)) {
-    throw new Error(`${what} host not allowed: ${u.hostname}`);
-  }
-  if (u.hostname === "github.com" && u.pathname.includes("/blob/")) {
-    u.hostname = "raw.githubusercontent.com";
-    u.pathname = u.pathname.replace("/blob/", "/");
-  }
-  return u.toString();
-};
 
 /**
  * In-memory cache for fetched remote images.
@@ -118,44 +92,6 @@ export function readParams(url) {
     isAutoMode: q.get("mode") === "auto"
   };
 }
-
-/**
- * @typedef {{ok: true, value: string} | {ok: false, error: string}} CheckedResult
- */
-
-/**
- * Validates an HTTPS URL against an allowlist and normalize Github blob URLS.
- * 
- * @param {string} paramValue - Raw value, empty is treated as absent, not invalid
- * @param {Set<string>} hosts - Allowed hostnames
- * @param {string} paramName - parameter name used in error messages
- * @returns {CheckedResult} Result object with either a valid value or an error message.
- */
-function checkUrl(paramValue, hosts, paramName) {
-  if (!paramValue) return { ok: true, value: "" };
-  let u;
-  try { u = new URL(paramValue); } catch { return { ok: false, error: `${paramName} is not a valid URL` }; }
-  if (u.protocol !== "https:") return { ok: false, error: `${paramName} must be an HTTPS URL` };
-  if (!hosts.has(u.hostname)) return { ok: false, error: `${paramName} is not an allowed hostname` };
-  return { ok: true, value: u.toString() };
-}
-
-/**
- * Validates an assets URL against the asset host allowedlist
- * 
- * @param {string} value - Raw still or play value
- * @param {string} name - Parameter name used in error text
- * @returns {CheckedResult}
- */
-export const CheckAsset = (value, name) => checkUrl(value, ASSET_HOSTS, name);
-
-/**
- * Validates an assets URL against the asset host allowedlist
- * 
- * @param {string} value - Raw still or play value
- * @returns {CheckedResult}
- */
-export const CheckBack = (value) => checkUrl(value, BACK_HOSTS, "back");
 
 /**
  * Generate the shared state key
