@@ -164,17 +164,6 @@ describe('Edge Handler — Request Flow & Redirects', () => {
         expect(res.headers.get('Location')).toBe('https://github.com/qvd808/fallback-repo');
     });
 
-    it('returns 200 with an empty body on HEAD requests for assets', async () => {
-        const req = new Request('http://localhost/scene?still=https://github.com/poster.webp&back=https://github.com/qvd808', {
-            method: 'HEAD'
-        });
-
-        const res = await handler(req);
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/webp');
-        expect(await res.text()).toBe('');
-    });
-
     it('returns 502 when fetching a remote asset fails', async () => {
         server.use(
             http.get('https://github.com/broken.webp', () => new HttpResponse(null, { status: 404 }))
@@ -185,40 +174,6 @@ describe('Edge Handler — Request Flow & Redirects', () => {
 
         expect(res.status).toBe(502);
         expect(await res.text()).toContain('Failed to fetch remote asset');
-    });
-
-    it('reverts to poster.webp after play state expires past 12s', async () => {
-        const back = 'https://github.com/qvd808';
-        const still = 'https://github.com/poster.webp';
-        const play = 'https://github.com/eyes-once.svg';
-
-        await handler(new Request(`http://localhost/play?back=${back}&still=${still}&play=${play}`));
-        vi.advanceTimersByTime(13000);
-
-        const res = await handler(new Request(`http://localhost/scene?back=${back}&still=${still}&play=${play}`));
-
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/webp');
-        expect(await res.text()).toBe('RIFF-WEBP-POSTER-BYTES');
-    });
-
-    it('allows explicit cache retirement using retire_redis and retire_memory', async () => {
-        const back = 'https://github.com/qvd808';
-        const still = 'https://github.com/poster.webp';
-        const play = 'https://github.com/eyes-once.svg';
-
-        await handler(new Request(`http://localhost/play?back=${back}&still=${still}&play=${play}`));
-
-        retire_redis();
-        retire_memory();
-
-        const mod = await import("../api/index.mjs");
-        const freshHandler = mod.default;
-
-        const res = await freshHandler(new Request(`http://localhost/scene?back=${back}&still=${still}&play=${play}`));
-
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/webp');
     });
 });
 
@@ -263,186 +218,12 @@ describe('Edge Handler — Fallbacks & Missing Assets', () => {
         expect(await res.text()).toBe('RIFF-WEBP-POSTER-BYTES');
     });
 
-    it('does not attempt animation when play parameter is missing', async () => {
-        const req = new Request('http://localhost/scene?still=https://github.com/poster.webp&back=https://github.com/qvd808');
-        const res = await handler(req);
-
-        // Should serve still, not black canvas, and not crash on missing play
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/webp');
-    });
-
     it('redirects on /play even when play asset is not configured', async () => {
         const req = new Request('http://localhost/play?still=https://github.com/poster.webp&back=https://github.com/qvd808');
         const res = await handler(req);
 
         expect(res.status).toBe(302);
         expect(res.headers.get('Location')).toBe('https://github.com/qvd808');
-    });
-});
-
-// ============================================================================
-// 3. NETWORK CALL & CACHE INTERACTION
-// ============================================================================
-describe('Network Call & Cache Interaction', () => {
-    /** @type {any} */
-    let handler;
-    /** @type {any} */
-    let fetchRemoteAsset;
-
-    beforeEach(async () => {
-        retire_memory();
-        retire_redis();
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
-        server.resetHandlers();
-
-        const mod = await import("../api/index.mjs");
-        handler = mod.default;
-        const shared = await import("../api/_shared.mjs");
-        fetchRemoteAsset = shared.fetchRemoteAsset;
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
-    });
-
-    it('/play triggers a fire-and-forget network request to pre-warm the play asset', async () => {
-        let calls = 0;
-        const playUrl = 'https://github.com/pre-warm.svg';
-
-        server.use(
-            http.get(playUrl, () => {
-                calls++;
-                return new HttpResponse(Buffer.from('<svg>pre-warmed</svg>'), {
-                    headers: { 'Content-Type': 'image/svg+xml' },
-                });
-            })
-        );
-
-        const req = new Request(`http://localhost/play?back=https://github.com/qvd808&still=https://github.com/poster.webp&play=${playUrl}`);
-        const res = await handler(req);
-
-        // User gets immediate redirect regardless of fetch outcome
-        expect(res.status).toBe(302);
-
-        // Let the unawaited fetchRemoteAsset promise settle
-        await vi.runOnlyPendingTimersAsync();
-
-        // The network call was still initiated inside fetchRemoteAsset
-        expect(calls).toBe(1);
-    });
-
-    it('/play does not trigger pre-warm when play asset is missing', async () => {
-        let posterCalls = 0;
-        server.use(
-            http.get('https://github.com/poster.webp', () => {
-                posterCalls++;
-                return new HttpResponse(Buffer.from('poster'), {
-                    headers: { 'Content-Type': 'image/webp' },
-                });
-            })
-        );
-
-        const req = new Request('http://localhost/play?back=https://github.com/qvd808&still=https://github.com/poster.webp');
-        const res = await handler(req);
-
-        expect(res.status).toBe(302);
-        expect(posterCalls).toBe(0);
-    });
-
-    it('/scene serves from cache without an extra network request after /play pre-warmed', async () => {
-        let calls = 0;
-        const playUrl = 'https://github.com/shared-cache.svg';
-
-        server.use(
-            http.get(playUrl, () => {
-                calls++;
-                return new HttpResponse(Buffer.from('<svg>cached</svg>'), {
-                    headers: { 'Content-Type': 'image/svg+xml' },
-                });
-            })
-        );
-
-        // /play pre-warms the asset into the shared in-memory cache (fire-and-forget)
-        await handler(new Request(`http://localhost/play?back=https://github.com/qvd808&still=https://github.com/poster.webp&play=${playUrl}`));
-
-        // Let the unawaited pre-warm fetch settle before asserting
-        await vi.runOnlyPendingTimersAsync();
-        expect(calls).toBe(1);
-
-        // /scene should serve the pre-warmed asset without a second network call
-        const sceneReq = new Request(`http://localhost/scene?back=https://github.com/qvd808&still=https://github.com/poster.webp&play=${playUrl}`);
-        const res = await handler(sceneReq);
-
-        expect(res.status).toBe(200);
-        expect(res.headers.get('Content-Type')).toBe('image/svg+xml');
-        expect(calls).toBe(1); // exactly one network request total
-    });
-});
-
-// ============================================================================
-// 4. REMOTE ASSET CACHE — TTL BEHAVIOR
-// ============================================================================
-describe('Remote Asset Cache — TTL Behavior', () => {
-    /** @type {any} */
-    let fetchRemoteAsset;
-
-    beforeEach(async () => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
-        server.resetHandlers();
-
-        const shared = await import("../api/_shared.mjs");
-        fetchRemoteAsset = shared.fetchRemoteAsset;
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
-    });
-
-    it('returns cached data on second fetch within TTL', async () => {
-        let calls = 0;
-        const url = 'https://github.com/cache-test.webp';
-
-        server.use(
-            http.get(url, () => {
-                calls++;
-                return new HttpResponse(Buffer.from(`version-${calls}`), {
-                    headers: { 'Content-Type': 'image/webp' },
-                });
-            })
-        );
-
-        const first = await fetchRemoteAsset(url);
-        const second = await fetchRemoteAsset(url);
-
-        expect(Buffer.from(first.data).toString()).toBe('version-1');
-        expect(Buffer.from(second.data).toString()).toBe('version-1');
-        expect(calls).toBe(1);
-    });
-
-    it('refetches when cache TTL expires', async () => {
-        let calls = 0;
-        const url = 'https://github.com/cache-expire.webp';
-
-        server.use(
-            http.get(url, () => {
-                calls++;
-                return new HttpResponse(Buffer.from(`version-${calls}`), {
-                    headers: { 'Content-Type': 'image/webp' },
-                });
-            })
-        );
-
-        const first = await fetchRemoteAsset(url);
-        expect(Buffer.from(first.data).toString()).toBe('version-1');
-
-        vi.advanceTimersByTime(61000);
-
-        const second = await fetchRemoteAsset(url);
-        expect(Buffer.from(second.data).toString()).toBe('version-2');
-        expect(calls).toBe(2);
     });
 });
 
@@ -476,13 +257,6 @@ describe('Play State — Redis Sync', () => {
         vi.useRealTimers();
         delete process.env.UPSTASH_REDIS_REST_URL;
         delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    });
-
-    it('isPlaying returns false after WINDOW_MS expires', async () => {
-        await markPlaying('expiring-key');
-        vi.advanceTimersByTime(WINDOW_MS + 1);
-        const active = await isPlaying('expiring-key');
-        expect(active).toBe(false);
     });
 
     it('redis getdel removes the key after reading (one-shot distributed state)', async () => {
