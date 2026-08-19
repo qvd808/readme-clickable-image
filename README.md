@@ -36,11 +36,11 @@ It uses a stateful Edge Proxy that intercepts link clicks (`/play`), updates a t
 
 <p align="center">
   <a href="https://readme-clickable-image.vercel.app/play?back=https://github.com/qvd808/readme-onclick-animation&still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg">
-    <img src="https://readme-clickable-image.vercel.app/scene?back=https://github.com/qvd808/readme-onclick-animation&still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg" width="100%" alt="Clickable README Animation Demo">
+    <img src="https://readme-clickable-image.vercel.app/scene?still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg" width="100%" alt="Clickable README Animation Demo">
   </a>
 </p>
 
-* **What happens:** Clicking the image above triggers the action animation (`eyes-once.svg`) for 12 seconds, then automatically resets back to `poster.webp` when idle.
+* **What happens:** Clicking the image above triggers the action animation (`eyes-once.svg`).
 
 ## 🚀 Quick Start Guide
 
@@ -69,8 +69,8 @@ The two endpoints read different parameters. Keep `still` and `play` **identical
 | Parameter | Required? | Description |
 | --- | --- | --- |
 | `back` | **Required** | Where to send the visitor after the click. Must be HTTPS on `github.com` or `www.github.com`; anything else returns 400. |
-| `play` | Optional | Animation asset.If not present, well some other assets going to be change not your assets
-| `still` | Optional | Idle asset. Never served by this endpoint — it only contributes to the state key. |
+| `play` | Optional | Animation asset. If not present, well some other assets going to be change not your assets
+| `still` | Optional | Animation assets. Only in here because the logic required us to find the key to flips the flags. Same as play, honestly if you missing the above, your animation likely won't work. Just put it optional cuz, that how I code it up.
 | `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from, read from the `Referer`. Falls back to `back`. |
 
 ### `/scene` — the `<img src>`
@@ -79,5 +79,21 @@ The two endpoints read different parameters. Keep `still` and `play` **identical
 | --- | --- | --- |
 | `still` | Optional | Idle image. **If missing, malformed, or on a disallowed host:** displays a black canvas (`#000000`). |
 | `play` | Optional | Animation, served while the play flag is set. **If missing:** always serves `still`. |
-| `back` | Ignored | Not read by this endpoint. |
-| `mode` | Ignored | Not read by this endpoint. |
+
+## Known issue
+
+### Browser support
+
+`mode=auto` depends on the browser passing the `Referer` along. Measured by clicking the real link on a real GitHub repo page:
+
+| Browser | `Referer` received | Result |
+| --- | --- | --- |
+| Chrome / Edge | `https://github.com/USER/REPO` | returns to the repo |
+| Firefox | `https://github.com/USER/REPO` | returns to the repo |
+| Brave | `https://github.com/` (origin only) | falls back to `back` |
+
+> Brave caps every cross-site `Referer` at the origin and never sends the path ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), shipped in 1.19). That is identical to what GitHub sends from a profile page, so the server cannot tell the two apart and takes the fallback. The cap applies universally and a site cannot opt out of it, so this is not workaroundable.
+
+> **Shared state, by design:** the Redis key is derived from the `still|play` pair only. Per-visitor state is not possible here: `/scene` is requested by GitHub's Camo servers, not by the visitor's browser.
+
+> **Region dependent:** Because the redis key consume the first /scene reach the network, if user from farther away call, during the time nearer user calls, it will likely get consume and the user see nothing
