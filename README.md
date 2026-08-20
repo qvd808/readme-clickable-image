@@ -1,99 +1,127 @@
-# ⚡ readme-onclick-animation
+# readme-onclick-animation
+
+**Make an image in your GitHub README swap to an animation when someone clicks it** — no JavaScript, no iframes (GitHub strips both). Just an `<a>` wrapping an `<img>`.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Deployment Status](https://img.shields.io/badge/Vercel-Active-brightgreen?logo=vercel)](https://readme-clickable-image.vercel.app/scene)
-[![Runtime](https://img.shields.io/badge/Runtime-Vercel%20Edge-blue?logo=v8)](https://vercel.com)
-[![Storage](https://img.shields.io/badge/Storage-Upstash%20Redis-red?logo=redis)](https://upstash.com)
-
-> **Create interactive animations from clicks through Markdown files on GitHub.**
-
----
-
-## 💡 The Problem & The Solution
-
-### ❌ The Problem
-GitHub strictly strips all `<script>`, `<iframe>`, and inline event attributes from Markdown files for security. As a result, standard READMEs remain completely static—it is impossible to run JavaScript to trigger animations or change media when a visitor clicks an image.
-
-### ✅ The Solution
-`readme-onclick-animation` **bypasses GitHub's script restriction** without needing any client-side JavaScript! 
-
-It uses a stateful Edge Proxy that intercepts link clicks (`/play`), updates a temporary state flag in Redis, and dynamically streams the requested animation asset (`/scene`) straight to GitHub's Camo proxy with `no-store` headers.
-
-```
-[ Visitor Clicks Image in README ]
-              │
-              ├──> 1. Hits /play (Sets Redis state flag = true)
-              │
-              └──> 2. Redirects back to GitHub -> Camo requests /scene
-                   └── /scene streams SVG animation
-```
-
----
-
-## 🎬 Interactive Live Demo
-
-**Click the image below to test the click-triggered animation in real-time:**
+![Runtime: Vercel Edge](https://img.shields.io/badge/Runtime-Vercel%20Edge-blue?logo=v8)
+![Storage: Upstash Redis](https://img.shields.io/badge/Storage-Upstash%20Redis-red?logo=redis)
 
 <p align="center">
   <a href="https://readme-clickable-image.vercel.app/play?back=https://github.com/qvd808/readme-onclick-animation&still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg">
-    <img src="https://readme-clickable-image.vercel.app/scene?still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg" width="100%" alt="Clickable README Animation Demo">
+    <img src="https://readme-clickable-image.vercel.app/scene?still=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/poster.webp&play=https://raw.githubusercontent.com/qvd808/readme-onclick-animation/main/eyes-once.svg" width="100%" alt="Click me">
   </a>
 </p>
 
-* **What happens:** Clicking the image above triggers the action animation (`eyes-once.svg`).
+<p align="center"><em>↑ Click it. (Then read <a href="#limitations">Limitations</a> — the trigger is best-effort by design.)</em></p>
 
-## 🚀 Quick Start Guide
-
-You can use the shared server at `https://readme-clickable-image.vercel.app` out of the box for your own GitHub README!
-
-### Step 1: Upload Your Assets
-Upload your image files directly to your GitHub repository:
-* **Idle Asset (`still`):** Static `.webp`, `.png`, `.jpg`, or looping animated `.webp` / `.gif`.
-* **Triggered Asset (`play`):** Animated `.svg`, `.webp`, or `.gif`.
-
-### Step 2: Add HTML to Your README.md
-
-Copy and paste this HTML snippet into your `README.md`:
+Paste this into your own README, swapping in your repo and asset URLs:
 
 ```html
-<a href="https://readme-clickable-image.vercel.app/play?back=https://github.com/YOUR_USER/YOUR_REPO&still=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/still.webp&play=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/animation.svg">
-  <img src="https://readme-clickable-image.vercel.app/scene?still=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/still.webp&play=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/animation.svg" width="100%" alt="Clickable README Image">
+<a href="https://readme-clickable-image.vercel.app/play?back=https://github.com/USER/REPO&still=STILL_URL&play=PLAY_URL">
+  <img src="https://readme-clickable-image.vercel.app/scene?still=STILL_URL&play=PLAY_URL" alt="Click me">
 </a>
 ```
-## ⚙️ URL Parameter Reference
 
-The two endpoints read different parameters. Keep `still` and `play` **identical in both URLs** — the play state is keyed on that pair, so any difference means the click flips a flag `/scene` never reads.
+- `STILL_URL` and `PLAY_URL` must be **byte-identical in both the `<a href>` and the `<img src>`** — the state key is `sha1(still|play)`, so any difference means your click flips a flag `/scene` never reads.
+- Both must be hosted on GitHub (see [Allowed asset hosts](#allowed-asset-hosts)). Other domains are silently ignored.
 
-### `/play` — the `<a href>`
+---
 
-| Parameter | Required? | Description |
+## How it works
+
+An `<a href>` in a README is a real navigation; an `<img src>` is a real HTTP request. That's the whole budget GitHub gives you — and it's exactly enough for one bit of state.
+
+```
+1. Visitor clicks the image
+        │
+        ▼
+2. GET /play  ──►  SET key = 1   (Redis, 12s TTL)      key = sha1(still|play)
+        │
+        ▼
+3. 302 back to the GitHub page
+        │
+        ▼
+4. GitHub's Camo proxy re-requests the <img>
+        │
+        ▼
+5. GET /scene ──►  GETDEL key
+        │            set?   → stream PLAY_URL (the animation)
+        │            unset  → stream STILL_URL (the idle image)
+        ▼
+6. Visitor sees the animation
+```
+
+## Parameters
+
+### `GET /play` — the `<a href>`
+
+| Parameter | Required | Behavior |
 | --- | --- | --- |
-| `back` | **Required** | Where to send the visitor after the click. Must be HTTPS on `github.com` or `www.github.com`; anything else returns 400. |
-| `play` | Optional | Animation asset. If not present, well some other assets going to be change not your assets
-| `still` | Optional | Animation assets. Only in here because the logic required us to find the key to flips the flags. Same as play, honestly if you missing the above, your animation likely won't work. Just put it optional cuz, that how I code it up.
-| `mode` | Optional | Set to `auto` to return the visitor to the page they clicked from, read from the `Referer`. Falls back to `back`. |
+| `back` | **Yes** | Redirect target after the click. Must be HTTPS on `github.com` / `www.github.com`; anything else → `400`. |
+| `play` | **In practice, yes** | Animation asset URL. **If omitted, no flag is written and the click does nothing.** |
+| `still` | **In practice, yes** | Idle asset URL. Marked optional in code, but it's half the state key — omit it and the key won't match your `/scene`. |
+| `mode` | No | `auto` returns the visitor to the exact page they clicked from, via the `Referer` header, falling back to `back`. See [browser support](#modeauto-browser-support). |
 
-### `/scene` — the `<img src>`
+Sets `sha1(still\|play)` in Redis for **12 seconds**, then issues a `302`.
 
-| Parameter | Required? | Description |
+### `GET /scene` — the `<img src>`
+
+| Parameter | Required | Behavior |
 | --- | --- | --- |
-| `still` | Optional | Idle image. **If missing, malformed, or on a disallowed host:** displays a black canvas (`#000000`). |
-| `play` | Optional | Animation, served while the play flag is set. **If missing:** always serves `still`. |
+| `still` | No | Idle image. Missing, malformed, or on a disallowed host → a solid black `1100×520` SVG. |
+| `play` | No | Animation, served **once** while the flag is set. Missing → always serves `still`. |
 
-## Known issue
+Reads the flag with `GETDEL` — it's consumed by the first request that sees it. Returns `502` if the upstream asset can't be fetched. Assets are capped at **10 MB** and a **10 s** fetch timeout. Responses are `no-store` so Camo re-fetches on each render.
 
-### Browser support
+### Allowed asset hosts
 
-`mode=auto` depends on the browser passing the `Referer` along. Measured by clicking the real link on a real GitHub repo page:
+`still` and `play` must be on one of:
 
-| Browser | `Referer` received | Result |
+`raw.githubusercontent.com` · `user-images.githubusercontent.com` · `objects.githubusercontent.com` · `gist.githubusercontent.com` · `github.com`
+
+Any other domain (your own CDN, jsDelivr, etc.) is silently dropped: `still` falls back to the black canvas, `play` never fires. Supported formats: `.svg` `.webp` `.gif` `.png` `.jpg` `.avif`.
+
+---
+
+## Limitations
+
+Read these before filing a bug — each is a property of the medium, not a missing feature.
+
+- **State is global, not per-visitor.** There is no visitor to key on (Camo fetches `/scene`, not the browser). For 12s after any click, whichever Camo request arrives first gets the animation — often not the person who clicked. On a busy README the clicker will sometimes miss their own animation. This is inherent, not fixable.
+- **Anyone can trigger it.** Both asset URLs are public in your README, so anyone can build your `/play` URL and fire the animation. There's no ownership check.
+- **The click may not reach `/scene` at all.** The browser image cache, Camo's cache, and GitHub's Turbo page cache can each serve the old image without hitting the server. `no-store` reduces this; it doesn't eliminate it. If nothing happens, try a hard reload.
+- **The public server has no rate limit or uptime promise.** `readme-clickable-image.vercel.app` is offered as-is. If you depend on it, self-host.
+
+### `mode=auto` browser support
+
+Requires the browser to send a full `Referer` path.
+
+| Browser | `Referer` sent | Result |
 | --- | --- | --- |
-| Chrome / Edge | `https://github.com/USER/REPO` | returns to the repo |
-| Firefox | `https://github.com/USER/REPO` | returns to the repo |
+| Chrome / Edge / Firefox | `https://github.com/USER/REPO` | returns to the repo |
 | Brave | `https://github.com/` (origin only) | falls back to `back` |
 
-> Brave caps every cross-site `Referer` at the origin and never sends the path ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), shipped in 1.19). That is identical to what GitHub sends from a profile page, so the server cannot tell the two apart and takes the fallback. The cap applies universally and a site cannot opt out of it, so this is not workaroundable.
+Brave caps every cross-site `Referer` at the origin ([brave-browser#13464](https://github.com/brave/brave-browser/issues/13464), 1.19+) — byte-identical to what GitHub sends from a profile page, so the server can't tell them apart. Not workaroundable; always set `back`.
 
-> **Shared state, by design:** the Redis key is derived from the `still|play` pair only. Per-visitor state is not possible here: `/scene` is requested by GitHub's Camo servers, not by the visitor's browser.
+---
 
-> **Region dependent:** Because the redis key consume the first /scene reach the network, if user from farther away call, during the time nearer user calls, it will likely get consume and the user see nothing
+## Self-host
+
+Runs on Vercel Edge + Upstash Redis.
+
+1. Fork this repo and import it into [Vercel](https://vercel.com/new).
+2. Create a free [Upstash Redis](https://upstash.com) database.
+3. Add its REST URL and token as env vars: `UPSTASH_REDIS_REST_URL` / `KV_REST_API_URL` and `UPSTASH_REDIS_REST_TOKEN` / `KV_REST_API_TOKEN`.
+4. Deploy. Your endpoints are `https://YOUR-APP.vercel.app/play` and `/scene`.
+
+> **Without Redis configured, the server still starts and still serves images — clicks just silently do nothing.** If the animation never fires on your own deploy, check those two env vars first.
+
+Tests: `npm test`
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+The demo assets (`eyes-once.svg`, `index.html`) depict **Wonder of U** from *JoJo's Bizarre Adventure*, © Hirohiko Araki / Shueisha. **That artwork is not covered by the MIT license** — it's a non-commercial personal easter egg. Replace it with your own assets before reusing.
