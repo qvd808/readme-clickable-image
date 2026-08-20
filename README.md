@@ -120,6 +120,16 @@ Tests: `npm test`
 
 ---
 
+## Disclaimers
+
+Not affiliated with, endorsed by, or sponsored by GitHub.
+
+The `/play` endpoint sees a visitor's IP address and referring URL, as any web request does. Nothing is stored beyond an ephemeral 12-second flag.
+
+AI was involved throughout the making of this project — including research, writing code, editing, and testing.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
